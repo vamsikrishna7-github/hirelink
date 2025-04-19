@@ -20,42 +20,52 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login with API URL:', process.env.NEXT_PUBLIC_API_URL);
+      
       // First, authenticate with the backend
-      const authResponse = await fetch("http://127.0.0.1:8000/api/auth/jwt/create/", {
+      const authResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: email,
           password: password,
         }),
       });
 
-      const authData = await authResponse.json();
-
       if (!authResponse.ok) {
-        throw new Error(authData.detail || "Authentication failed");
+        const errorData = await authResponse.json();
+        console.error('Login failed:', errorData);
+        throw new Error(errorData.detail || "Authentication failed");
       }
+
+      const authData = await authResponse.json();
+      console.log('Login successful, received tokens');
 
       // Store the tokens
       document.cookie = `access_token=${authData.access}; path=/; max-age=3600`; // 1 hour
       document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`; // 7 days
 
       // Then, get user profile to verify user type
-      const profileResponse = await fetch("http://127.0.0.1:8000/api/auth/users/me/", {
+      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${authData.access}`,
           "Content-Type": "application/json",
         },
+        credentials: 'include',
       });
 
-      const profileData = await profileResponse.json();
-
       if (!profileResponse.ok) {
+        const errorData = await profileResponse.json();
+        console.error('Profile fetch failed:', errorData);
         throw new Error("Failed to fetch user profile");
       }
+
+      const profileData = await profileResponse.json();
+      console.log('Profile fetched successfully:', profileData);
 
       // Store user type in cookie
       document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`; // 1 hour
@@ -63,8 +73,12 @@ export default function Login() {
       // Redirect based on user type
       router.push(`/dashboard/${profileData.user_type}`);
     } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
       console.error("Login error:", err);
+      if (err.message.includes('Failed to fetch')) {
+        setError("Unable to connect to the server. Please check your internet connection and try again.");
+      } else {
+        setError(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

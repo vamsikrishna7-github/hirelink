@@ -24,7 +24,7 @@ export default function ConsultancyDashboard() {
       {/* Top Navigation Bar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div className="container-fluid">
-          <Link href="/" className="navbar-brand fw-bold">HireLink</Link>
+          <Link href="/dashboard/consultancy" className="navbar-brand fw-bold">Consultancy Dashboard</Link>
           <div className="d-flex align-items-center">
             <button className="btn btn-link me-3">
               <FaBell size={20} />

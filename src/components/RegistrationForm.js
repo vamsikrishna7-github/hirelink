@@ -58,7 +58,7 @@ export default function RegistrationForm({ userType }) {
 
     try {
       // Register user
-      const registerResponse = await fetch('http://127.0.0.1:8000/api/auth/users/', {
+      const registerResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export default function RegistrationForm({ userType }) {
       const registerData = await registerResponse.json();
 
       // Login to get access token using JWT endpoint
-      const loginResponse = await fetch('http://127.0.0.1:8000/api/auth/jwt/create/', {
+      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export default function RegistrationForm({ userType }) {
       const { access, refresh } = await loginResponse.json();
 
       // Update profile based on user type
-      const profileEndpoint = `http://127.0.0.1:8000/api/${userType}/profile/`;
+      const profileEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/${userType}/profile/`;
       const profileData = {
         ...(userType === 'employer' && {
           company_name: formData.company_name,
