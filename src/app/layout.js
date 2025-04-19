@@ -3,6 +3,7 @@ import './globals.css';
 import BootstrapClient from './BootstrapClient';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import IsHome from '@/components/IsHome';
 
 export const metadata = {
   title: "HireLink - Connect Employers with Consultancies",
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
       <body>
         <BootstrapClient />
         <Navbar />
+        <IsHome />
         <main className="min-vh-100">
           {children}
         </main>
