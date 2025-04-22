@@ -5,7 +5,7 @@ import Image from 'next/image';
 import styles from '../app/dashboard/candidate/page.module.css';
 import { logout } from '@/utils/logout';
 import { useRouter } from 'next/navigation';
-
+import Link from 'next/link';
 
 export default function DashboardSidebar({ 
   isMobile, 
@@ -32,10 +32,12 @@ const router = useRouter();
         {!isMobile && <h4 className="mb-4" style={{ color: '#000000' }}>Zyukthi</h4>}
         <ul className="list-unstyled">
           {menuItems.map((item, index) => (
+            <Link href={`${item.link}`} className='text-decoration-none' key={index}>
             <li key={index} className={item.active ? styles.active : ''}>
               {item.icon}
               <span>{item.label}</span>
             </li>
+            </Link>
           ))}
         </ul>
       </div>
@@ -55,10 +57,12 @@ const router = useRouter();
             }
 
             return (
+              <Link href={`${item.link}`} className='text-decoration-none' key={index}>
               <li key={index}>
                 {item.icon}
                 <span>{item.label}</span>
               </li>
+              </Link>
             );
           })}
         </ul>

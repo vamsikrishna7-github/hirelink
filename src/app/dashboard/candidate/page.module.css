@@ -440,8 +440,8 @@
   }
 
   .container {
-    padding: 20px;
-    margin-top: 60px; /* Already added above */
+    padding: 30px;
+    margin-top: 40px; 
   }
 
   .header {
@@ -464,6 +464,7 @@
 
 @media (max-width: 480px) {
   .container {
+    margin-top: 60px;
     padding: 16px;
   }
 

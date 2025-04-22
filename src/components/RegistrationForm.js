@@ -75,6 +75,14 @@ export default function RegistrationForm({ userType }) {
 
       if (!registerResponse.ok) {
         const errorData = await registerResponse.json();
+        if(errorData.email){ setError(errorData.email); }
+        if(errorData.password){ setError(errorData.password); }
+        if(errorData.non_field_errors){ setError(errorData.non_field_errors); }
+        if(errorData.name){ setError(errorData.name); }
+        if(errorData.phone){ setError(errorData.phone); }
+        if(errorData.re_password){ setError(errorData.re_password); }
+        if(errorData.user_type){ setError(errorData.user_type); }
+
         throw new Error(errorData.detail || 'Registration failed');
       }
 
@@ -93,6 +101,10 @@ export default function RegistrationForm({ userType }) {
       });
 
       if (!loginResponse.ok) {
+        const errorData = await loginResponse.json();
+        if(errorData.email){ setError(errorData.email); }
+        if(errorData.password){ setError(errorData.password); }
+        if(errorData.non_field_errors){ setError(errorData.non_field_errors); }
         throw new Error('Login failed');
       }
 
@@ -134,6 +146,29 @@ export default function RegistrationForm({ userType }) {
       });
 
       if (!profileResponse.ok) {
+        const errorData = await profileResponse.json();
+        if(errorData.email){ setError(errorData.email); }
+        if(errorData.password){ setError(errorData.password); }
+        if(errorData.non_field_errors){ setError(errorData.non_field_errors); }
+        if(errorData.name){ setError(errorData.name); }
+        if(errorData.phone){ setError(errorData.phone); }
+        if(errorData.re_password){ setError(errorData.re_password); }
+        if(errorData.user_type){ setError(errorData.user_type); }
+        if(errorData.company_name){ setError(errorData.company_name); }
+        if(errorData.industry){ setError(errorData.industry); }
+        if(errorData.company_size){ setError(errorData.company_size); }
+        if(errorData.company_address){ setError(errorData.company_address); }
+        if(errorData.website_url){ setError(errorData.website_url); }
+        if(errorData.consultancy_name){ setError(errorData.consultancy_name); }
+        if(errorData.specialization){ setError(errorData.specialization); }
+        if(errorData.experience_years){ setError(errorData.experience_years); }
+        if(errorData.office_address){ setError(errorData.office_address); }
+        if(errorData.website){ setError(errorData.website); }
+        if(errorData.education){ setError(errorData.education); }
+        if(errorData.skills){ setError(errorData.skills); }
+        if(errorData.resume_url){ setError(errorData.resume_url); }
+        if(errorData.portfolio_website){ setError(errorData.portfolio_website); }
+        
         throw new Error('Profile update failed');
       }
 
@@ -142,7 +177,8 @@ export default function RegistrationForm({ userType }) {
       localStorage.setItem('refresh_token', refresh);
       router.push(`/dashboard/${userType}`);
     } catch (err) {
-      setError(err.message);
+      // setError(err.message);
+      console.log("From Registration Error: ", err);
     } finally {
       setLoading(false);
     }

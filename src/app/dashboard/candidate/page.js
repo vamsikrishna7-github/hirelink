@@ -1,36 +1,21 @@
 "use client";
 
 import styles from "./page.module.css";
-import { useEffect, useState } from "react";
 import { Card } from "react-bootstrap";
-import { motion, AnimatePresence } from "framer-motion";
-import { FiHome, FiBriefcase, FiBookmark, FiSearch, FiFileText, FiUser, FiSettings, FiHelpCircle, FiLogOut, FiCheckCircle, FiXCircle, FiClock, FiCalendar } from 'react-icons/fi';
+import { motion } from "framer-motion";
+import { FiCheckCircle, FiXCircle, FiClock, FiCalendar } from 'react-icons/fi';
 import Image from 'next/image';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import TopNavbar from "@/components/TopNavbar";
-import DashboardSidebar from "@/components/DashboardSidebar";
-import Jobs from "./Jobs";
-import Saved from "./Saved";
-import MyApplications from "./My-applications";
-import FindJobs from "./Find-Jobs";
+import Jobs from "./jobs/page";
+import Saved from "./saved-jobs/page";
+import MyApplications from "./my-applications/page";
+import FindJobs from "./find-jobs/page";
+import Settings from "./settings/page";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Dashboard() {
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const stats = [
     { 
       label: "Applied Jobs", 
@@ -95,31 +80,7 @@ export default function Dashboard() {
     }
   ];
 
-  const menuItems = [
-    { icon: <FiHome />, label: "Dashboard", active: true },
-    { icon: <FiBriefcase />, label: "Jobs" },
-    { icon: <FiBookmark />, label: "Saved" },
-    { icon: <FiSearch />, label: "Find Jobs" },
-    { icon: <FiFileText />, label: "My Applications" },
-    { icon: <FiUser />, label: "My Profile" },
-  ];
 
-  const footerItems = [
-    { icon: <FiSettings />, label: "Settings" },
-    { icon: <FiHelpCircle />, label: "Help Center" },
-    { icon: <FiLogOut />, label: "Log Out" },
-  ];
-
-  const handleMenuClick = () => {
-    setShowSidebar(!showSidebar);
-    if (!showSidebar) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-  };
-
-  // Chart data
   const chartData = {
     labels: ['Rejected', 'Pending', 'Scheduled'],
     datasets: [
@@ -169,26 +130,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <TopNavbar 
-        isMobile={isMobile} 
-        showSidebar={showSidebar} 
-        handleMenuClick={handleMenuClick} 
-      />
-
-      <AnimatePresence>
-        {(showSidebar || !isMobile) && (
-          <DashboardSidebar 
-            isMobile={isMobile}
-            showSidebar={showSidebar}
-            menuItems={menuItems}
-            footerItems={footerItems}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className={`${styles.container} border`}>
-        <div className="row d-none">
+        <>
+        <div className="row">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -236,9 +179,10 @@ export default function Dashboard() {
               </motion.div>
             ))}
           </div>
+        </div>
 
-          <div className="row w-100 mt-5 g-4">
-            <div className="col-md-6">
+          <div className="row w-100 mt-5 g-4 border me-0">
+            <div className="col-md-6 border">
               <Card className={styles.analyticsCard}>
                 <Card.Body>
                   <h5>Analytics</h5>
@@ -248,72 +192,79 @@ export default function Dashboard() {
                 </Card.Body>
               </Card>
             </div>
-            <div className="col-md-6">
-              <Card className={styles.recentCard}>
-                <Card.Body>
-                  <h5>Recently Applied</h5>
-                  <div className={styles.recentTable}>
-                    {recent.map((item, i) => (
-                      <motion.div
-                        key={i}
-                        className={styles.recentRow}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 * i }}
-                      >
-                        <div className={styles.companyInfo}>
-                          <div className={styles.companyLogoWrapper}>
-                            <Image
-                              src={item.logo}
-                              alt={item.company}
-                              width={32}
-                              height={32}
-                              className={styles.companyLogo}
-                            />
-                          </div>
-                          <div>
-                            <h6 className="mb-0">{item.company}</h6>
-                            <small className="text-muted">{item.position}</small>
-                          </div>
+            
+            <div className="col-12 col-md-6 mb-4 border">
+            <Card className={`${styles.recentCard} h-100`}>
+              <Card.Body>
+                <h5 className="mb-3">Recently Applied</h5>
+                <div className={styles.recentTable}>
+                  {recent.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      className={`${styles.recentRow} d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 * i }}
+                    >
+                      <div className="d-flex align-items-center gap-2 flex-grow-1">
+                        <div className={styles.companyLogoWrapper}>
+                          <Image
+                            src={item.logo}
+                            alt={item.company}
+                            width={32}
+                            height={32}
+                            className={styles.companyLogo}
+                          />
                         </div>
-                        <div className={styles.applicationInfo}>
-                        <small className="text-muted">{item.date}</small>
-                          <span
-                            className={
-                              item.status === "Rejected"
-                                ? styles.rejected
-                                : item.status === "Pending"
-                                ? styles.pending
-                                : styles.scheduled
-                            }
-                          >
-                            {item.status}
-                          </span>
+                        <div>
+                          <h6 className="mb-0">{item.company}</h6>
+                          <small className="text-muted">{item.position}</small>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <button className={`${styles.viewall} btn btn-primary border-0 text-center rounded-5 mt-3`}>View All</button>
-                </Card.Body>
-              </Card>
-            </div>
-          </div>
-        </div>
-        <div className="row d-none">
-          <Jobs />
-        </div>
-        <div className="row d-none">
-          <Saved />
-        </div>
-        <div className="row d-none">
-          <MyApplications />
-        </div>
-        <div className="row">
-          <FindJobs />
-        </div>
-      </div>
+                      </div>
+                      <div className="text-end">
+                        <small className="text-muted d-block me-2 mb-1">{item.date}</small>
+                        <span
+                          className={
+                            item.status === "Rejected"
+                              ? styles.rejected
+                              : item.status === "Pending"
+                              ? styles.pending
+                              : styles.scheduled
+                          }
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
 
-      
-    </div>
+                <button
+                  className={`${styles.viewall} btn btn-primary border-0 text-center rounded-5 w-100 mt-3`}
+                >
+                  View All
+                </button>
+              </Card.Body>
+            </Card>
+          </div>
+
+        </div>
+        </>
+        // <div className="row d-none">
+        //   <Jobs />
+        // </div>
+        // <div className="row d-none">
+        //   <Saved />
+        // </div>
+        // <div className="row d-none">
+        //   <MyApplications />
+        // </div>
+        // <div className="row d-none">
+        //   <FindJobs />
+        // </div>
+        // <div className="row d-none">
+        //   <Settings />
+        // </div>
+
   );
 } 
