@@ -1,317 +1,224 @@
 "use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { 
-  FaBriefcase, 
-  FaUsers, 
-  FaChartLine, 
-  FaBell, 
-  FaUserCircle,
-  FaPlus,
-  FaSearch,
-  FaFilter,
-  FaFileAlt,
-  FaGraduationCap
-} from 'react-icons/fa';
-import LogoutButton from '@/app/components/LogoutButton';
+import styles from "./page.module.css";
+import { useEffect, useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Card } from "react-bootstrap";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiHome, FiBriefcase, FiBookmark, FiSearch, FiFileText, FiUser, FiSettings, FiHelpCircle, FiLogOut } from 'react-icons/fi';
+import Image from 'next/image';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+import TopNavbar from "@/components/TopNavbar";
+import DashboardSidebar from "@/components/DashboardSidebar";
+import { logout } from '../../../utils/logout';
 
-export default function CandidateDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+export default function Dashboard() {
+  useEffect(() => {
+    require("bootstrap/dist/js/bootstrap.bundle.min.js");
+  }, []);
+
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const stats = [
+    { label: "Rejected", value: 105, color: "#e53e3e", bgColor: "#fff5f5", bgColorDark: "#fed7d7" },
+    { label: "Pending", value: 40, color: "#FFD166", bgColor: "#ebf8ff", bgColorDark: "#FFD166" },
+    { label: "Scheduled", value: 30, color: "#48bb78", bgColor: "#f0fff4", bgColorDark: "#c6f6d5" },
+    { label: "All Applications", value: 250, color: "#2d3748", bgColor: "#f7fafc", bgColorDark: "#edf2f7" },
+  ];
+
+  const recent = [
+    { company: "Chameleon LTD", status: "Pending", date: "2024-03-15" },
+    { company: "Sushi Inc", status: "Rejected", date: "2024-03-14" },
+    { company: "LoveClip App", status: "Rejected", date: "2024-03-13" },
+    { company: "OB Solutions", status: "Scheduled", date: "2024-03-12" },
+  ];
+
+  const menuItems = [
+    { icon: <FiHome />, label: "Dashboard", active: true },
+    { icon: <FiBriefcase />, label: "Jobs" },
+    { icon: <FiBookmark />, label: "Saved" },
+    { icon: <FiSearch />, label: "Find Jobs" },
+    { icon: <FiFileText />, label: "My Applications" },
+    { icon: <FiUser />, label: "My Profile" },
+  ];
+
+  const footerItems = [
+    { icon: <FiSettings />, label: "Settings" },
+    { icon: <FiHelpCircle />, label: "Help Center" },
+    { icon: <FiLogOut />, label: "Log Out" },
+  ];
+
+  const handleMenuClick = () => {
+    setShowSidebar(!showSidebar);
+    if (!showSidebar) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  // Chart data
+  const chartData = {
+    labels: ['Rejected', 'Pending', 'Scheduled', 'Other'],
+    datasets: [
+      {
+        data: [105, 40, 30, 75],
+        backgroundColor: [
+          '#e53e3e',
+          '#FFC107',
+          '#48bb78',
+          '#a0aec0',
+        ],
+        borderColor: [
+          '#c53030',
+          '#FFD166',
+          '#38a169',
+          '#718096',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          font: {
+            size: 12,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.raw || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    cutout: '70%',
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Top Navigation Bar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div className="container-fluid">
-          <Link href="/dashboard/candidate" className="navbar-brand fw-bold">Candidate Dashboard</Link>
-          <div className="d-flex align-items-center">
-            <button className="btn btn-link me-3">
-              <FaBell size={20} />
-            </button>
-            <div className="dropdown">
-              <button className="btn btn-link dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                <FaUserCircle size={24} />
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li><Link className="dropdown-item" href="/profile">Profile</Link></li>
-                <li><Link className="dropdown-item" href="/settings">Settings</Link></li>
-                <li><hr className="dropdown-divider" /></li>
-                <li>
-                  <LogoutButton />
-                </li>
-              </ul>
-            </div>
+    <div className={styles.wrapper}>
+      <TopNavbar 
+        isMobile={isMobile} 
+        showSidebar={showSidebar} 
+        handleMenuClick={handleMenuClick} 
+      />
+
+      <AnimatePresence>
+        {(showSidebar || !isMobile) && (
+          <DashboardSidebar 
+            isMobile={isMobile}
+            showSidebar={showSidebar}
+            menuItems={menuItems}
+            footerItems={footerItems}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className={styles.container}>
+        <div className="row">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className={styles.header}
+          >
+            <h2>Hello Sukumar</h2>
+            <p>Let&apos;s find a good fitted job here</p>
+          </motion.div>
+
+          <div className="d-flex flex-wrap gap-3 mt-4">
+            {stats.map((stat, idx) => (
+              <motion.div
+                key={idx}
+                className={styles.statCard}
+                style={{
+                  '--bg-color': stat.bgColor,
+                  '--bg-color-dark': stat.bgColorDark,
+                  '--color': stat.color,
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 * idx }}
+              >
+                <h3>{stat.value}</h3>
+                <p>{stat.label}</p>
+              </motion.div>
+            ))}
           </div>
-        </div>
-      </nav>
 
-      <div className="dashboard-page">
-        <div className="container-fluid">
-          <div className="row">
-            {/* Sidebar */}
-            <div className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-              <div className="position-sticky pt-3">
-                <ul className="nav flex-column">
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('overview')}
-                    >
-                      <FaChartLine className="me-2" />
-                      Overview
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'jobs' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('jobs')}
-                    >
-                      <FaBriefcase className="me-2" />
-                      Jobs
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'applications' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('applications')}
-                    >
-                      <FaFileAlt className="me-2" />
-                      Applications
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'skills' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('skills')}
-                    >
-                      <FaGraduationCap className="me-2" />
-                      Skills
-                    </button>
-                  </li>
-                </ul>
-              </div>
+          <div className="row w-100 mt-5 g-4">
+            <div className="col-md-6">
+              <Card className={styles.analyticsCard}>
+                <Card.Body>
+                  <h5>Analytics</h5>
+                  <div className={styles.donutChart}>
+                    <Doughnut data={chartData} options={chartOptions} />
+                  </div>
+                </Card.Body>
+              </Card>
             </div>
-
-            {/* Main Content */}
-            <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-              {/* Overview Tab */}
-              {activeTab === 'overview' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Dashboard Overview</h1>
-                  </div>
-
-                  {/* Stats Cards */}
-                  <div className="row">
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Active Applications</h5>
-                          <h2 className="card-text">5</h2>
-                          <p className="text-success">+2 this week</p>
+            <div className="col-md-6">
+              <Card className={styles.recentCard}>
+                <Card.Body>
+                  <h5>Recently Applied</h5>
+                  <ul className="list-unstyled">
+                    {recent.map((item, i) => (
+                      <motion.li
+                        key={i}
+                        className={styles.recentItem}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 * i }}
+                      >
+                        <div>
+                          <span>{item.company}</span>
+                          <small className="d-block text-muted">{item.date}</small>
                         </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Interviews</h5>
-                          <h2 className="card-text">3</h2>
-                          <p className="text-success">+1 scheduled</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Skills</h5>
-                          <h2 className="card-text">12</h2>
-                          <p className="text-success">+3 this month</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recent Activity */}
-                  <div className="card mt-4">
-                    <div className="card-header">
-                      <h5 className="mb-0">Recent Activity</h5>
-                    </div>
-                    <div className="card-body">
-                      <ul className="list-group list-group-flush">
-                        <li className="list-group-item">Interview scheduled with TechCorp for tomorrow</li>
-                        <li className="list-group-item">Application submitted for Senior Developer position</li>
-                        <li className="list-group-item">New skill added: React Native</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Jobs Tab */}
-              {activeTab === 'jobs' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Available Jobs</h1>
-                  </div>
-
-                  {/* Search and Filter */}
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaSearch />
+                        <span
+                          className={
+                            item.status === "Rejected"
+                              ? styles.rejected
+                              : item.status === "Pending"
+                              ? styles.pending
+                              : styles.scheduled
+                          }
+                        >
+                          {item.status}
                         </span>
-                        <input type="text" className="form-control" placeholder="Search jobs..." />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaFilter />
-                        </span>
-                        <select className="form-select">
-                          <option>All Categories</option>
-                          <option>Full-time</option>
-                          <option>Part-time</option>
-                          <option>Remote</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Jobs List */}
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Position</th>
-                          <th>Company</th>
-                          <th>Location</th>
-                          <th>Posted</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Senior Frontend Developer</td>
-                          <td>TechCorp</td>
-                          <td>Remote</td>
-                          <td>2 days ago</td>
-                          <td>
-                            <button className="btn btn-sm btn-primary">Apply</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Product Manager</td>
-                          <td>Global Inc</td>
-                          <td>New York</td>
-                          <td>1 week ago</td>
-                          <td>
-                            <button className="btn btn-sm btn-primary">Apply</button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Applications Tab */}
-              {activeTab === 'applications' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">My Applications</h1>
-                  </div>
-
-                  {/* Applications List */}
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Position</th>
-                          <th>Company</th>
-                          <th>Status</th>
-                          <th>Applied Date</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Senior Frontend Developer</td>
-                          <td>TechCorp</td>
-                          <td><span className="badge bg-warning">In Review</span></td>
-                          <td>2024-03-15</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary">View</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Product Manager</td>
-                          <td>Global Inc</td>
-                          <td><span className="badge bg-success">Interview Scheduled</span></td>
-                          <td>2024-03-10</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary">View</button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Skills Tab */}
-              {activeTab === 'skills' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">My Skills</h1>
-                    <button className="btn btn-primary">
-                      <FaPlus className="me-2" />
-                      Add Skill
-                    </button>
-                  </div>
-
-                  {/* Skills Grid */}
-                  <div className="row">
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">React</h5>
-                          <div className="progress mb-2">
-                            <div className="progress-bar" role="progressbar" style={{width: '90%'}}>90%</div>
-                          </div>
-                          <p className="card-text">Advanced</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Node.js</h5>
-                          <div className="progress mb-2">
-                            <div className="progress-bar" role="progressbar" style={{width: '80%'}}>80%</div>
-                          </div>
-                          <p className="card-text">Advanced</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Python</h5>
-                          <div className="progress mb-2">
-                            <div className="progress-bar" role="progressbar" style={{width: '70%'}}>70%</div>
-                          </div>
-                          <p className="card-text">Intermediate</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </main>
+                      </motion.li>
+                    ))}
+                  </ul>
+                  <button className="btn btn-primary mt-3">View All</button>
+                </Card.Body>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
