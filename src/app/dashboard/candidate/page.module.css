@@ -209,7 +209,6 @@
   padding: 32px;
   overflow-x: hidden;
   position: relative;
-  margin-top: 60px; /* Add margin to account for the fixed navbar */
 }
 
 .header {

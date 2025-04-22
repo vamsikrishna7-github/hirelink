@@ -12,6 +12,8 @@ import { Doughnut } from 'react-chartjs-2';
 import TopNavbar from "@/components/TopNavbar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { logout } from '../../../utils/logout';
+import Jobs from "./Jobs";
+import Saved from "./Saved";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -141,7 +143,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      <div className={styles.container}>
+      <div className={`${styles.container}`}>
         <div className="row">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -221,7 +223,15 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        <div className="row d-none">
+          <Jobs />
+        </div>
+        <div className="row d-none">
+          <Saved />
+        </div>
       </div>
+
+      
     </div>
   );
 } 

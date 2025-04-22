@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['api.hirelink.com', 'hirelink-api.onrender.com', 'images.unsplash.com'],
+    domains: ['api.hirelink.com', 'hirelink-api.onrender.com', 'images.unsplash.com', 'upload.wikimedia.org', '1000logos.net', 'encrypted-tbn0.gstatic.com'],
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
