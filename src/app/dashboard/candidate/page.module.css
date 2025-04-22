@@ -1,5 +1,10 @@
 /* page.module.css */
 
+.viewall {
+  background-color: #2BA4FA !important;
+  color: white !important;
+}
+
 .wrapper {
   display: flex;
   min-height: 100vh;
@@ -483,4 +488,71 @@
     align-items: flex-start;
     gap: 8px;
   }
+}
+
+.companyLogos {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.companyLogoWrapper {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.companyLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.recentTable {
+  margin-top: 1rem;
+}
+
+.recentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.recentRow:last-child {
+  border-bottom: none;
+}
+
+.recentRow:hover {
+  background-color: #f8fafc;
+  transform: translateX(5px);
+}
+
+.companyInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.companyInfo h6 {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.applicationInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.applicationInfo small {
+  color: #64748b;
 }

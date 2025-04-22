@@ -21,7 +21,7 @@ const router = useRouter();
 
   return (
     <motion.div
-      className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''} ${showSidebar ? styles.show : ''}`}
+      className={`${styles.sidebar} ${isMobile ? styles.sidebarMobile : ''} ${showSidebar ? styles.show : ''} vh-100`}
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -29,7 +29,7 @@ const router = useRouter();
       transition={{ duration: 0.3 }}
     >
       <div className={styles.sidebarContent}>
-        <h4 className="mb-4" style={{ color: '#000000' }}>Zyukthi</h4>
+        {!isMobile && <h4 className="mb-4" style={{ color: '#000000' }}>Zyukthi</h4>}
         <ul className="list-unstyled">
           {menuItems.map((item, index) => (
             <li key={index} className={item.active ? styles.active : ''}>
