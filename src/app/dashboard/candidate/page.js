@@ -181,8 +181,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-          <div className="row w-100 mt-5 g-4 border me-0">
-            <div className="col-md-6 border">
+          <div className="row w-100 mt-5 g-4">
+            <div className="col-md-6">
               <Card className={styles.analyticsCard}>
                 <Card.Body>
                   <h5>Analytics</h5>
@@ -193,7 +193,7 @@ export default function Dashboard() {
               </Card>
             </div>
             
-            <div className="col-12 col-md-6 mb-4 border">
+            <div className="col-12 col-md-6 mb-4">
             <Card className={`${styles.recentCard} h-100`}>
               <Card.Body>
                 <h5 className="mb-3">Recently Applied</h5>

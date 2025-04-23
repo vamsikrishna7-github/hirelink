@@ -58,7 +58,7 @@ const router = useRouter();
 
             return (
               <Link href={`${item.link}`} className='text-decoration-none' key={index}>
-              <li key={index}>
+              <li key={index} className={item.active ? styles.active : ''}>
                 {item.icon}
                 <span>{item.label}</span>
               </li>
@@ -66,10 +66,10 @@ const router = useRouter();
             );
           })}
         </ul>
-
+        <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark'>
         <div className={styles.userProfile}>
           <Image 
-            src="/profile.webp" 
+            src="/My_profile.webp" 
             alt="Profile" 
             className={styles.avatar}
             width={45}
@@ -80,6 +80,7 @@ const router = useRouter();
             <small>yeddala.sukumar@gmail.com</small>
           </div>
         </div>
+        </Link>
       </div>
     </motion.div>
   );
