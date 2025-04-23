@@ -67,7 +67,7 @@ const router = useRouter();
           })}
         </ul>
         <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark'>
-        <div className={styles.userProfile}>
+        <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
             src="/My_profile.webp" 
             alt="Profile" 
