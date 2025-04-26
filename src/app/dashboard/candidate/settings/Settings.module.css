@@ -66,3 +66,74 @@
     display: none;
   }
 }
+
+/* Custom styles to enhance Bootstrap */
+.card {
+  transition: transform 0.2s ease-in-out;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btnLight {
+  transition: all 0.3s ease;
+  text-align: left;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnLight:hover {
+  background-color: #f8f9fa;
+  border-color: #0d6efd;
+  transform: translateX(5px);
+}
+
+.btnDanger {
+  color: #dc3545;
+}
+
+.btnDanger:hover {
+  background-color: #fff5f5;
+  border-color: #dc3545;
+}
+
+.textPrimary {
+  color: #0d6efd !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .containerFluid {
+    padding: 1rem;
+  }
+}
+
+/* Custom scrollbar */
+.scrollableContainer {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.scrollableContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
