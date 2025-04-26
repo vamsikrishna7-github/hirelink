@@ -5,6 +5,7 @@ import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase } from 'react-icons/fa';
 import { FiBookmark } from 'react-icons/fi';
 import styles from './Jobs.module.css';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const Jobs = () => {
   const jobs = [
@@ -113,7 +114,7 @@ const Jobs = () => {
             </div>
             <div className={styles.jobActions}>
               <button className={styles.saveButton}> <FiBookmark /> Save</button>
-              <button className={styles.applyButton}>Apply Now</button>
+              <Link href="/dashboard/candidate/apply-job"><button className={styles.applyButton}>Apply Now</button></Link>
             </div>
           </div>
         ))}

@@ -6,6 +6,7 @@ import { FiBookmark } from 'react-icons/fi';
 import Image from 'next/image';
 import styles from './Find-Jobs.module.css';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import Link from 'next/link';
 
 const Jobs = () => {
   const jobs = [
@@ -136,7 +137,7 @@ const Jobs = () => {
               </div>
               <div className={styles.jobActions}>
                 <Button variant="outline-primary" className={styles.saveButton}> <FiBookmark /> Save</Button>
-                <Button variant="primary" className={styles.applyButton}>Apply Now</Button>
+                <Link href="/dashboard/candidate/apply-job"><Button variant="primary" className={styles.applyButton}>Apply Now</Button></Link>
               </div>
             </Card.Body>
           </Card>
