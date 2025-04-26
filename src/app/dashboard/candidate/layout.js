@@ -180,6 +180,10 @@ export default function DashboardLayout({ children }) {
             showSidebar={showSidebar}
             menuItems={menuItems}
             footerItems={footerItems}
+            onCloseSidebar={() => {
+              setShowSidebar(false);
+              document.body.style.overflow = 'auto';
+            }}
           />
         )}
       </AnimatePresence>

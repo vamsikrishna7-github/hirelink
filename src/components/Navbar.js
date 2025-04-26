@@ -11,6 +11,8 @@ export default function Navbar() {
     setIsOpen(false);
   };
 
+
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light position-fixed w-100 z-3 top-0">
       <div className="container">

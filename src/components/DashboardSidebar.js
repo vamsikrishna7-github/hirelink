@@ -11,13 +11,20 @@ export default function DashboardSidebar({
   isMobile, 
   showSidebar, 
   menuItems, 
-  footerItems 
+  footerItems,
+  onCloseSidebar
 }) {
   const sidebarVariants = {
     hidden: { x: -280, opacity: 0 },
     visible: { x: 0, opacity: 1 },
   };
 const router = useRouter();
+
+  const handleLinkClick = () => {
+    if (isMobile && onCloseSidebar) {
+      onCloseSidebar();
+    }
+  };
 
   return (
     <motion.div
@@ -32,7 +39,7 @@ const router = useRouter();
         {!isMobile && <h4 className="mb-4" style={{ color: '#000000' }}>Zyukthi</h4>}
         <ul className="list-unstyled">
           {menuItems.map((item, index) => (
-            <Link href={`${item.link}`} className='text-decoration-none' key={index}>
+            <Link href={`${item.link}`} className='text-decoration-none' key={index} onClick={handleLinkClick}>
             <li key={index} className={item.active ? styles.active : ''}>
               {item.icon}
               <span>{item.label}</span>
@@ -48,7 +55,10 @@ const router = useRouter();
             if (item.label === "Log Out") {
               return (
                 <li key={index}
-                  onClick={()=>{logout(router);}}
+                  onClick={()=>{
+                    handleLinkClick();
+                    logout(router);
+                  }}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -57,7 +67,7 @@ const router = useRouter();
             }
 
             return (
-              <Link href={`${item.link}`} className='text-decoration-none' key={index}>
+              <Link href={`${item.link}`} className='text-decoration-none' key={index} onClick={handleLinkClick}>
               <li key={index} className={item.active ? styles.active : ''}>
                 {item.icon}
                 <span>{item.label}</span>
@@ -66,7 +76,7 @@ const router = useRouter();
             );
           })}
         </ul>
-        <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark'>
+        <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
             src="/My_profile.webp" 
