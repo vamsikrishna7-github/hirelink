@@ -79,9 +79,9 @@ const router = useRouter();
         <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
-            src="/My_profile.webp" 
+            src="https://img.icons8.com/color/480/google-logo.png" 
             alt="Profile" 
-            className={styles.avatar}
+            className={`${styles.avatar} bg-white`}
             width={45}
             height={45}
           />
