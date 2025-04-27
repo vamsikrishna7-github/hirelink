@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase } from 'react-icons/fa';
-import { FiBookmark } from 'react-icons/fi';
+import { FiBookmark, FiChevronDown } from 'react-icons/fi';
 import Image from 'next/image';
 import styles from './Find-Jobs.module.css';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
@@ -69,6 +69,7 @@ const Jobs = () => {
                   <option value="intermediate">Intermediate</option>
                   <option value="senior">Senior</option>
                 </Form.Select>
+                <FiChevronDown className="text-muted" />
               </div>
 
               <div className={styles.filterItem}>
@@ -79,6 +80,7 @@ const Jobs = () => {
                   <option value="onsite">On Site</option>
                   <option value="hybrid">Hybrid</option>
                 </Form.Select>
+                <FiChevronDown className="text-muted" />
               </div>
 
               <div className={styles.filterItem}>
@@ -89,6 +91,7 @@ const Jobs = () => {
                   <option value="7d">Last 7 Days</option>
                   <option value="30d">Last 30 Days</option>
                 </Form.Select>
+                <FiChevronDown className="text-muted" />
               </div>
 
               <div className={styles.filterItem}>
@@ -100,6 +103,7 @@ const Jobs = () => {
                   <option value="contract">Contract</option>
                   <option value="internship">Internship</option>
                 </Form.Select>
+                <FiChevronDown className="text-muted" />
               </div>
             </div>
           </Col>
