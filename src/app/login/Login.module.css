@@ -1,0 +1,133 @@
+.loginContainer {
+    padding: 30px;
+    background-image: url('/Login/login-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    height: auto;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (max-aspect-ratio: 9/16) {
+    .loginContainer {
+        min-height: 150vh;
+    }
+}
+
+.passwordToggleIcon:hover {
+    background-color: #94949471;
+}
+
+.input {
+    height: 56px;
+}
+
+.input:focus {
+    box-shadow: none;
+}
+
+.submitbtn {
+    height: 56px;
+    background-color: #90CAF9;
+    color: #000000;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    border-radius: 10px;
+}
+
+.submitbtn:hover {
+    background-color: #4eafff;
+}
+
+.socialbtn {
+    height: 56px;
+    border: 1px solid #C7C7C7;
+    border-radius: 5px;
+}
+
+.socialbtn:hover {
+    background-color: #bababab9;
+    border: 0;
+}
+
+.header {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 32px;
+    color: #000000;
+    line-height: 130%;
+    letter-spacing: -2%;
+}
+
+.label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: #000000;
+    line-height: 100%;
+    letter-spacing: 0%;
+}
+
+.input::placeholder {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #00000099;
+    line-height: 100%;
+    letter-spacing: 0%;
+}
+
+.secoundarytext {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.60);
+    line-height: 100%;
+    letter-spacing: 0%;
+}
+
+.forgetPassword {
+    color: rgba(0, 0, 0, 0.6);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 1rem; /* 16px equivalent but more responsive */
+    font-weight: 400;
+    line-height: 1.5;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.forgetPassword:hover {
+    color: rgba(0, 0, 0, 0.8);
+    text-decoration: underline !important;
+}
+
+.signupLink {
+    color: #3c3c3c;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.signupLink:hover {
+    color: rgba(0, 0, 0, 0.8);
+    text-decoration: underline !important;
+}
+
+@media (max-width: 387px) {
+    .forgetPassword {
+        font-size: 13px;
+    }
+    .rememberMe {
+        font-size: 13px;
+    }
+}

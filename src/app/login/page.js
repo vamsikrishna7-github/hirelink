@@ -1,9 +1,13 @@
 "use client";
 
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaBuilding, FaHandshake, FaUserTie, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import styles from './Login.module.css';
+import Image from 'next/image';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function Login() {
   const router = useRouter();
@@ -86,135 +90,87 @@ export default function Login() {
 
 
   return (
-    <div className="login-page py-5">
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-lg-6">
-            <div className="card shadow-lg">
-              <div className="card-body p-4 p-md-5">
+<div className={`container-fluid ${styles.loginContainer}`}>
+    <div className="row justify-content-center align-items-center h-100">
+    <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+            <div className="card border-0 p-3 p-sm-4 p-md-5" style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '24px'}}>
                 <div className="text-center mb-4">
-                  <h1 className="h3 fw-bold">Welcome Back</h1>
-                  <p className="text-muted">Sign in to your account</p>
+                    <h2 className={`${styles.header} mt-3`}>Sign In</h2>
                 </div>
-
-                {/* User Type Selection */}
-                <div className="d-flex justify-content-center mb-4">
-                  <div className="btn-group" role="group">
-                    <button
-                      type="button"
-                      className={`btn ${userType === 'employer' ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setUserType('employer')}
-                    >
-                      <FaBuilding className="me-2" />
-                      Employer
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${userType === 'consultancy' ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setUserType('consultancy')}
-                    >
-                      <FaHandshake className="me-2" />
-                      Consultancy
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${userType === 'candidate' ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setUserType('candidate')}
-                    >
-                      <FaUserTie className="me-2" />
-                      Candidate
-                    </button>
-                  </div>
-                </div>
-
                 {error && (
-                  <div className="alert alert-danger" role="alert">
-                    {error}
+                  <div className="d-inline-flex align-items-center gap-1 ps-2 pe-3 py-1 mb-2 bg-danger-100 text-danger rounded-pill">
+                    <span className="bg-danger rounded-circle" style={{width: '6px', height: '6px'}}></span>
+                    <small className="fw-medium">{error}</small>
                   </div>
                 )}
-
+                
                 <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">Email address</label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <FaEnvelope />
-                      </span>
-                      <input
-                        type="email"
-                        className="form-control"
-                        id="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
+                    <div className="mb-3">
+                        <label htmlFor="email" className={`${styles.label} form-label`}>Email</label>
+                        <input 
+                            type="email" 
+                            className={`${styles.input} form-control rounded-5`} 
+                            id="email" 
+                            placeholder="Example@gmail.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
                     </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label htmlFor="password" className="form-label">Password</label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <FaLock />
-                      </span>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className="form-control"
-                        id="password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="btn border-secondary"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <FaEyeSlash className="text-secondary" /> : <FaEye className="text-secondary" />}
-                      </button>
+                    <div className="mb-3 position-relative">
+                        <label htmlFor="password" className={`${styles.label} form-label`}>Password</label>
+                        <div className="position-relative">
+                            <input 
+                                type={showPassword ? "text" : "password"} 
+                                className={`${styles.input} form-control rounded-5 pe-5`}
+                                id="password" 
+                                placeholder="*******"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button 
+                                type="button"
+                                className={`btn btn-link position-absolute end-0 top-50 translate-middle-y me-2 `}
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{ zIndex: 5, color: '#6c757d' }}
+                            >
+                                <span className={`${styles.passwordToggleIcon} px-1 pb-1 rounded-3`}>{showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}</span>
+                            </button>
+                        </div>
+                        <div className="d-flex justify-content-between mt-3">
+                            <div className="form-check">
+                                <input 
+                                    type="checkbox" 
+                                    className="form-check-input" 
+                                    id="rememberMe"
+                                />
+                                <label className={`${styles.secoundarytext} form-check-label ${styles.rememberMe}`} htmlFor="rememberMe">Remember me</label>
+                            </div>
+                            <Link href="/forgot-password" className={`${styles.forgetPassword} text-decoration-none`}>Forget Password?</Link>
+                        </div>
                     </div>
-                  </div>
 
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="remember"
-                      />
-                      <label className="form-check-label" htmlFor="remember">
-                        Remember me
-                      </label>
+                    <button type="submit" disabled={isLoading} className={`${styles.submitbtn} btn btn-primary w-100 mb-3 py-2 fw-bold`}>{isLoading ? 'Signing in...' : 'Sign In'}</button>
+                    
+                    <div className="d-flex align-items-center justify-content-center mb-3">
+                      <hr className="flex-grow-1" />
+                      <span className={`${styles.secoundarytext} px-3`}>or continue with</span>
+                      <hr className="flex-grow-1" />
                     </div>
-                    <Link href="/forgot-password" className="text-primary">
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary w-100 mb-3"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Signing in...' : 'Sign In'}
-                  </button>
-
-                  <div className="text-center">
-                    <p className="mb-0">
-                      Don&apos;t have an account?{' '}
-                      <Link href="/register" className="text-primary">
-                        Register
-                      </Link>
-                    </p>
-                  </div>
+                    
+                    <button className={`${styles.socialbtn} btn btn-outline-secondary w-100 mb-3 py-2 rounded-5`}>
+                        <Image width={22} height={22} src="/login/google.svg" alt="Google" className="me-3 mb-1" /><span className={`${styles.secoundarytext}`}> Continue with Google</span>
+                    </button>
+                    
+                    <div className="text-center">
+                        <span className={`${styles.secoundarytext}`}>Don&apos;t have an account yet? </span>
+                        <Link href="/register" className={`${styles.signupLink} text-decoration-none`}>Sign up</Link>
+                    </div>
                 </form>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
+</div>
   );
 } 
