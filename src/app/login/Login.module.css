@@ -1,21 +1,21 @@
 .loginContainer {
-    padding: 30px;
     background-image: url('/login/login-background.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     min-height: 100vh;
-    height: auto;
     width: 100%;
-    position: relative;
     overflow: hidden;
 }
 
-@media (max-aspect-ratio: 9/16) {
-    .loginContainer {
-        min-height: 150vh;
-    }
+.row {
+    min-height: 100vh;
+    width: 100%;
+    min-width: 100vw;
+    overflow: hidden;
 }
+
+
 
 .passwordToggleIcon:hover {
     background-color: #94949471;

@@ -91,9 +91,9 @@ export default function Login() {
 
   return (
 <div className={`container-fluid ${styles.loginContainer}`}>
-    <div className="row justify-content-center align-items-center h-100">
+  <div className={`${styles.row} row justify-content-center align-items-center h-100`}>
     <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
-            <div className="card border-0 p-3 p-sm-4 p-md-5" style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '24px'}}>
+            <div className="card border-0 p-3 p-sm-4 p-md-5 shadow-lg" style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '24px'}}>
                 <div className="text-center mb-4">
                     <h2 className={`${styles.header} mt-3`}>Sign In</h2>
                 </div>
