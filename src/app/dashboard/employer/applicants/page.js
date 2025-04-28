@@ -163,10 +163,10 @@ export default function PostedJobsPage() {
           </div>
 
           {/* Jobs Table */}
-          <div className="card border-0 shadow-sm">
+          <div className={`${styles.card} card border-0 shadow-sm`}>
             <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
+              <table className={`${styles.table} table table-hover mb-0`}>
+                <thead className="">
                   <tr>
                     <th className="ps-4">ID</th>
                     <th>Candidates</th>
