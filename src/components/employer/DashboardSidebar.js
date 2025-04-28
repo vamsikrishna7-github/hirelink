@@ -76,7 +76,7 @@ const router = useRouter();
             );
           })}
         </ul>
-        <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
+        <Link href="/dashboard/employer/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
             src="https://img.icons8.com/color/480/google-logo.png" 

@@ -78,20 +78,7 @@ const Settings = () => {
           </div>
         </div>
         
-        <div className="col-lg-4 d-none d-lg-block">
-          <div className={`card shadow-sm border-0 h-100 ${styles.card}`}>
-            <div className="card-body d-flex align-items-center justify-content-center">
-              <Image
-                src="/settings_image.png"
-                alt="Settings Illustration"
-                width={400}
-                height={400}
-                priority
-                className="img-fluid"
-              />
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );
