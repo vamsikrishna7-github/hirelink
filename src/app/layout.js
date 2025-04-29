@@ -3,6 +3,8 @@ import './globals.css';
 import BootstrapClient from './BootstrapClient';
 import IsHome from '@/components/IsHome';
 import LayoutWrapper from '@/components/LayoutWrapper';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 
 export const metadata = {
   title: "HireLink - Connect Employers with Consultancies",
@@ -11,6 +13,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+    <GoogleOAuthProvider clientId="578224276104-sk0t3bvkn2qerllusiaibg6t0k348g31.apps.googleusercontent.com">
     <html lang="en">
       <body>
         <BootstrapClient />
@@ -22,5 +25,6 @@ export default function RootLayout({ children }) {
         </LayoutWrapper>
       </body>
     </html>
+    </GoogleOAuthProvider>
   );
 }

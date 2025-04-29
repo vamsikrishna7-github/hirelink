@@ -7,6 +7,9 @@ import { FaBuilding, FaHandshake, FaUserTie, FaEnvelope, FaLock, FaEye, FaEyeSla
 import styles from './Login.module.css';
 import Image from 'next/image';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
+
+
 
 export default function Login() {
   const router = useRouter();
@@ -164,13 +167,7 @@ export default function Login() {
                 <hr className="flex-grow-1" style={{borderColor: '#dee2e6'}} />
               </div>
               
-              <button 
-                className={`${styles.socialbtn} btn btn-outline-secondary w-100 mb-2 py-2 rounded-4`}
-                style={{height: '42px', fontSize: '14px'}}
-              >
-                <Image width={18} height={18} src="/login/google.svg" alt="Google" className="me-2 mb-1" />
-                <span className={`${styles.secoundarytext}`}>Continue with Google</span>
-              </button>
+              <GoogleLoginButton />
               
               <div className="text-center mt-2">
                 <span className={`${styles.secoundarytext}`} style={{fontSize: '13px'}}>Don&apos;t have an account? </span>
