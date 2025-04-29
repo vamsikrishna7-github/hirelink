@@ -23,25 +23,26 @@
   }
 
 
+
   /* jobs posted */
   /* Table Styling */
 .table {
   margin-bottom: 0;
-  border-radius: 20px !important;
-  background: rgba(217, 217, 217, 0.29) !important;
 }
 
 .table thead th {
+  background: transparent !important;
   border-bottom-width: 1px;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
-  color: #6c757d;
+  color: #000000;
   padding: 1rem 1.5rem;
 }
 
 .table tbody td {
+  background: transparent !important;
   padding: 1rem 1.5rem;
   vertical-align: middle;
   border-top: 1px solid #f0f0f0;
@@ -79,22 +80,24 @@
 /* Input Styling */
 .input-group-text {
   color: #6c757d ;
-  background-color: #fff;
+  background-color: transparent !important;
 }
 
 .form-control {
   border-color: #dee2e6;
+  background-color: transparent;
   transition: border-color 0.15s ease-in-out;
 }
 
 .input-group:focus-within .input-group-text {
-  border-color: #3b7ddd;
+  border-color: #000000;
   box-shadow: none;
 }
 
 .input-group .form-control:focus {
-  border-color: #3b7ddd;
+  border-color: #000000;
   box-shadow: none;
+  background-color: transparent !important;
 }
 
 

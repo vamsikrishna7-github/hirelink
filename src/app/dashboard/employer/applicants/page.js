@@ -88,7 +88,7 @@ export default function PostedJobsPage() {
   };
 
   return (
-    <div className={`container-fluid min-vh-100 bg-transparent ${styles.wrapper}`}>
+    <div className={`container-fluid min-vh-100 bg-transparent${styles.wrapper}`}>
       <div className="row justify-content-center pt-2">
         <div className="p-0">
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -99,7 +99,7 @@ export default function PostedJobsPage() {
           </div>
 
           {/* Filters and Search */}
-          <div className="card border-0 shadow-sm mb-4">
+          <div className={`${styles.card} card border-0 shadow-sm mb-4`}>
             <div className="card-body p-3">
               <div className="row g-3">
                 <div className="col-md-6">
@@ -163,10 +163,10 @@ export default function PostedJobsPage() {
           </div>
 
           {/* Jobs Table */}
-          <div className={`${styles.card} card border-0 shadow-sm`}>
-            <div className="table-responsive">
-              <table className={`${styles.table} table table-hover mb-0`}>
-                <thead className="">
+          <div className={`${styles.card} card border-0 shadow-sm bg-transparent rounded-3`}>
+            <div className="table-responsivet border-0 bg-transparent">
+              <table className={`${styles.table} table table-hover mb-0 bg-transparent table-striped`}>
+                <thead className="bg-transparent fw-bold">
                   <tr>
                     <th className="ps-4">ID</th>
                     <th>Candidates</th>
@@ -177,6 +177,7 @@ export default function PostedJobsPage() {
                     <th className="text-end pe-4">Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {currentApplications.length > 0 ? (
                     currentApplications.map((app) => (
@@ -246,7 +247,7 @@ export default function PostedJobsPage() {
 
             {/* Pagination */}
             {filteredApplications.length > applicationsPerPage && (
-              <div className="card-footer bg-white border-0 d-flex justify-content-between align-items-center py-3">
+              <div className="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
                 <small className="text-muted">
                   Showing {indexOfFirstApplication + 1}-{Math.min(indexOfLastApplication, filteredApplications.length)} of {filteredApplications.length} applications
                 </small>

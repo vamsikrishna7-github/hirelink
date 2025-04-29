@@ -104,7 +104,7 @@ export default function PostedJobsPage() {
           </div>
 
           {/* Filters and Search */}
-          <div className="card border-0 shadow-sm mb-4">
+          <div className={`${styles.card} card border-0 shadow-sm mb-4`}>
             <div className="card-body p-3">
               <div className="row g-3">
                 <div className="col-md-6">
@@ -167,10 +167,10 @@ export default function PostedJobsPage() {
           </div>
 
           {/* Jobs Table */}
-          <div className="card border-0 shadow-sm">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
+          <div className={`${styles.card} card border-0 shadow-sm bg-transparent border-0`}>
+            <div className="table-responsive border-0 bg-transparent">
+              <table className={`${styles.table} table table-hover mb-0 bg-transparent table-striped`}>
+                <thead className="bg-transparent fw-bold">
                   <tr>
                     <th className="ps-4">ID</th>
                     <th>Job Title</th>
@@ -244,7 +244,7 @@ export default function PostedJobsPage() {
 
             {/* Pagination */}
             {filteredJobs.length > jobsPerPage && (
-              <div className="card-footer bg-white border-0 d-flex justify-content-between align-items-center py-3">
+              <div className="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
                 <small className="text-muted">
                   Showing {indexOfFirstJob + 1}-{Math.min(indexOfLastJob, filteredJobs.length)} of {filteredJobs.length} jobs
                 </small>

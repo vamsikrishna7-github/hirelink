@@ -1,7 +1,6 @@
 "use client";
 
 import styles from "./page.module.css";
-import "./globals.css";
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FiHome, FiBriefcase, FiBookmark, FiSearch, FiFileText, FiUser, FiSettings, FiHelpCircle, FiLogOut, FiCheckCircle, FiXCircle, FiClock, FiCalendar, FiUsers } from 'react-icons/fi';
@@ -17,6 +16,11 @@ export default function DashboardLayout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // for css import
+    if (location.pathname.startsWith('/dashboard')) {
+      import('./dashboard.globals.css');
+    }
+
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
