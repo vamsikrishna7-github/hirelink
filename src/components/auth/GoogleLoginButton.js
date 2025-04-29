@@ -25,7 +25,7 @@ export default function GoogleLoginButton() {
         const userInfo = await response.json();
 
         // Now send ID token or email to your backend
-        const backendRes = await fetch('http://localhost:8000/api/auth/google-login/', {
+        const backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google-login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: tokenResponse.access_token }), // Using access_token to match backend
