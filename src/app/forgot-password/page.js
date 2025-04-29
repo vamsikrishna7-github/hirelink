@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FaEnvelope } from 'react-icons/fa';
+import styles from './Forgot-password.module.css';
+
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -42,18 +43,16 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-12 col-md-8 col-lg-6">
-            <div className="card shadow-lg border-0 rounded-4">
-              <div className="card-body p-4 p-md-5">
-                <div className="text-center mb-4">
-                  <h1 className="h2 fw-bold text-primary mb-3">Forgot Password</h1>
-                  <p className="text-muted mb-0">Enter your email address and we&apos;ll send you a link to reset your password.</p>
-                </div>
-
-                {error && (
+    <div className={`container-fluid ${styles.loginContainer}`}>
+    <div className={`${styles.row} row justify-content-center align-items-center h-100`}>
+      <div className="col-11 col-sm-9 col-md-7 col-lg-4 col-xl-3">
+        <div className={`${styles.card} card border-0 p-3 p-sm-4 shadow-lg`} style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '20px'}}>
+          <div className="text-center mb-3">
+            <h2 className={`${styles.header} mt-2`} style={{fontSize: '22px'}}>Forgot Password</h2>
+            <p className="text-muted mb-0">Enter your email address and we&apos;ll send you a link to reset your password.</p>
+          </div>
+          
+          {error && (
                   <div className="alert alert-danger rounded-3" role="alert">
                     <i className="bi bi-exclamation-circle me-2"></i>
                     {error}
@@ -67,53 +66,45 @@ export default function ForgotPassword() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="needs-validation" noValidate>
-                  <div className="mb-4">
-                    <label htmlFor="email" className="form-label fw-medium">Email address</label>
-                    <div className="input-group input-group-lg">
-                      <span className="input-group-text bg-light border-end-0">
-                        <FaEnvelope className="text-primary" />
-                      </span>
-                      <input
-                        type="email"
-                        className="form-control border-start-0"
-                        id="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="d-grid gap-3">
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary btn-lg rounded-3 fw-medium"
-                      disabled={loading}
-                    >
-                      {loading ? (
+          <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+            <div className="mb-2">
+              <label htmlFor="email" className={`${styles.label} form-label`} style={{fontSize: '14px'}}>Email address</label>
+              <input 
+                type="email" 
+                className={`${styles.input} form-control rounded-4`} 
+                style={{height: '42px', fontSize: '14px'}}
+                id="email" 
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className={`${styles.submitbtn} btn btn-primary w-100 mb-2 py-2 fw-bold`}
+              style={{height: '42px', fontSize: '14px'}}
+            >
+            {loading ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                           Sending...
                         </>
                       ) : (
                         'Send Reset Link'
-                      )}
-                    </button>
-                    <Link 
-                      href="/login" 
-                      className="btn btn-outline-secondary btn-lg rounded-3 fw-medium"
-                    >
-                      Back to Login
-                    </Link>
-                  </div>
-                </form>
-              </div>
+            )}
+            </button>
+            
+            <div className="text-center mt-2">
+              <span className={`${styles.secoundarytext}`} style={{fontSize: '13px'}}>Back to </span>
+              <Link href="/login" className={`${styles.signupLink} text-decoration-none`} style={{fontSize: '13px'}}>Login</Link>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
   );
 } 
