@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,7 +25,6 @@ export default function Login() {
     try {
       console.log('Attempting login with API URL:', process.env.NEXT_PUBLIC_API_URL);
       
-      // First, authenticate with the backend
       const authResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
         method: "POST",
         headers: {
@@ -48,11 +46,9 @@ export default function Login() {
       const authData = await authResponse.json();
       console.log('Login successful, received tokens');
 
-      // Store the tokens
-      document.cookie = `access_token=${authData.access}; path=/; max-age=3600`; // 1 hour
-      document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`; // 7 days
+      document.cookie = `access_token=${authData.access}; path=/; max-age=3600`;
+      document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`;
 
-      // Then, get user profile to verify user type
       const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
         method: "GET",
         headers: {
@@ -71,10 +67,7 @@ export default function Login() {
       const profileData = await profileResponse.json();
       console.log('Profile fetched successfully:', profileData);
 
-      // Store user type in cookie
-      document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`; // 1 hour
-
-      // Redirect based on user type
+      document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`;
       router.push(`/dashboard/${profileData.user_type}`);
     } catch (err) {
       console.error("Login error:", err);
@@ -88,89 +81,105 @@ export default function Login() {
     }
   };
 
-
   return (
-<div className={`container-fluid ${styles.loginContainer}`}>
-  <div className={`${styles.row} row justify-content-center align-items-center h-100`}>
-    <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
-            <div className="card border-0 p-3 p-sm-4 p-md-5 shadow-lg" style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '24px'}}>
-                <div className="text-center mb-4">
-                    <h2 className={`${styles.header} mt-3`}>Sign In</h2>
-                </div>
-                {error && (
-                  <div className="d-inline-flex align-items-center gap-1 ps-2 pe-3 py-1 mb-2 bg-danger-100 text-danger rounded-pill">
-                    <span className="bg-danger rounded-circle" style={{width: '6px', height: '6px'}}></span>
-                    <small className="fw-medium">{error}</small>
-                  </div>
-                )}
-                
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="email" className={`${styles.label} form-label`}>Email</label>
-                        <input 
-                            type="email" 
-                            className={`${styles.input} form-control rounded-5`} 
-                            id="email" 
-                            placeholder="Example@gmail.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3 position-relative">
-                        <label htmlFor="password" className={`${styles.label} form-label`}>Password</label>
-                        <div className="position-relative">
-                            <input 
-                                type={showPassword ? "text" : "password"} 
-                                className={`${styles.input} form-control rounded-5 pe-5`}
-                                id="password" 
-                                placeholder="*******"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                            <button 
-                                type="button"
-                                className={`btn btn-link position-absolute end-0 top-50 translate-middle-y me-2 `}
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{ zIndex: 5, color: '#6c757d' }}
-                            >
-                                <span className={`${styles.passwordToggleIcon} px-1 pb-1 rounded-3`}>{showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}</span>
-                            </button>
-                        </div>
-                        <div className="d-flex justify-content-between mt-3">
-                            <div className="form-check">
-                                <input 
-                                    type="checkbox" 
-                                    className="form-check-input" 
-                                    id="rememberMe"
-                                />
-                                <label className={`${styles.secoundarytext} form-check-label ${styles.rememberMe}`} htmlFor="rememberMe">Remember me</label>
-                            </div>
-                            <Link href="/forgot-password" className={`${styles.forgetPassword} text-decoration-none`}>Forget Password?</Link>
-                        </div>
-                    </div>
-
-                    <button type="submit" disabled={isLoading} className={`${styles.submitbtn} btn btn-primary w-100 mb-3 py-2 fw-bold`}>{isLoading ? 'Signing in...' : 'Sign In'}</button>
-                    
-                    <div className="d-flex align-items-center justify-content-center mb-3">
-                      <hr className="flex-grow-1" />
-                      <span className={`${styles.secoundarytext} px-3`}>or continue with</span>
-                      <hr className="flex-grow-1" />
-                    </div>
-                    
-                    <button className={`${styles.socialbtn} btn btn-outline-secondary w-100 mb-3 py-2 rounded-5`}>
-                        <Image width={22} height={22} src="/login/google.svg" alt="Google" className="me-3 mb-1" /><span className={`${styles.secoundarytext}`}> Continue with Google</span>
-                    </button>
-                    
-                    <div className="text-center">
-                        <span className={`${styles.secoundarytext}`}>Don&apos;t have an account yet? </span>
-                        <Link href="/register" className={`${styles.signupLink} text-decoration-none`}>Sign up</Link>
-                    </div>
-                </form>
+    <div className={`container-fluid ${styles.loginContainer}`}>
+      <div className={`${styles.row} row justify-content-center align-items-center h-100`}>
+        <div className="col-11 col-sm-9 col-md-7 col-lg-4 col-xl-3">
+          <div className={`${styles.card} card border-0 p-3 p-sm-4 shadow-lg`} style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '20px'}}>
+            <div className="text-center mb-3">
+              <h2 className={`${styles.header} mt-2`} style={{fontSize: '22px'}}>Sign In</h2>
             </div>
+            
+            {error && (
+              <div className="d-inline-flex align-items-center gap-1 ps-2 pe-3 py-1 mb-2 bg-danger-100 text-danger rounded-pill">
+                <span className="bg-danger rounded-circle" style={{width: '6px', height: '6px'}}></span>
+                <small className="fw-medium">{error}</small>
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+              <div className="mb-2">
+                <label htmlFor="email" className={`${styles.label} form-label`} style={{fontSize: '14px'}}>Email</label>
+                <input 
+                  type="email" 
+                  className={`${styles.input} form-control rounded-4`} 
+                  style={{height: '42px', fontSize: '14px'}}
+                  id="email" 
+                  placeholder="example@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="mb-2 position-relative">
+                <label htmlFor="password" className={`${styles.label} form-label`} style={{fontSize: '14px'}}>Password</label>
+                <div className="position-relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    className={`${styles.input} form-control rounded-4 pe-5`}
+                    style={{height: '42px', fontSize: '14px'}}
+                    id="password" 
+                    placeholder="********"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    className="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ zIndex: 5, color: '#6c757d', padding: '4px' }}
+                  >
+                    <span className={`${styles.passwordToggleIcon} pb-1 px-1 rounded-3`}>{showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}</span>
+                  </button>
+                </div>
+                
+                <div className="d-flex justify-content-between mt-2">
+                  <div className="form-check">
+                    <input 
+                      type="checkbox" 
+                      className="form-check-input" 
+                      id="rememberMe"
+                      style={{marginTop: '0.2rem'}}
+                    />
+                    <label className={`${styles.secoundarytext} form-check-label`} style={{fontSize: '13px'}} htmlFor="rememberMe">Remember me</label>
+                  </div>
+                  <Link href="/forgot-password" className={`${styles.forgetPassword} text-decoration-none`} style={{fontSize: '13px'}}>Forgot Password?</Link>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isLoading} 
+                className={`${styles.submitbtn} btn btn-primary w-100 mb-2 py-2 fw-bold`}
+                style={{height: '42px', fontSize: '14px'}}
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </button>
+              
+              <div className="d-flex align-items-center justify-content-center my-2">
+                <hr className="flex-grow-1" style={{borderColor: '#dee2e6'}} />
+                <span className={`${styles.secoundarytext} px-2`} style={{fontSize: '13px'}}>or continue with</span>
+                <hr className="flex-grow-1" style={{borderColor: '#dee2e6'}} />
+              </div>
+              
+              <button 
+                className={`${styles.socialbtn} btn btn-outline-secondary w-100 mb-2 py-2 rounded-4`}
+                style={{height: '42px', fontSize: '14px'}}
+              >
+                <Image width={18} height={18} src="/login/google.svg" alt="Google" className="me-2 mb-1" />
+                <span className={`${styles.secoundarytext}`}>Continue with Google</span>
+              </button>
+              
+              <div className="text-center mt-2">
+                <span className={`${styles.secoundarytext}`} style={{fontSize: '13px'}}>Don&apos;t have an account? </span>
+                <Link href="/register" className={`${styles.signupLink} text-decoration-none`} style={{fontSize: '13px'}}>Sign up</Link>
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
     </div>
-</div>
   );
-} 
+}

@@ -36,7 +36,8 @@
 }
 
 .faqItem {
-  background: #ffffff7c;
+  border: 1px solid #CCC;
+  background: rgba(230, 230, 230, 0.25);
   border-radius: 16px;
   margin-bottom: 1rem;
   overflow: hidden;
