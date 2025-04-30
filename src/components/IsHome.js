@@ -8,7 +8,7 @@ export default function IsHome() {
   const [ishome, setIshome] = useState(true); // assume home initially
 
   useEffect(() => {
-    setIshome(pathname === '/' || pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/forgot-password'));
+    setIshome(pathname === '/' || pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/forgot-password') || pathname.startsWith('/register'));
   }, [pathname]);
 
   return (

@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FaBuilding, FaHandshake, FaUserTie } from 'react-icons/fa';
+import styles from './page.module.css';
 
 export default function Register() {
   const [selectedType, setSelectedType] = useState('');
 
   return (
-    <div className="register-page py-5">
+    <div className={`${styles.wrapper} register-page py-5`}>
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-lg-8">
@@ -21,11 +22,11 @@ export default function Register() {
               {/* Employer Card */}
               <div className="col-md-4">
                 <div 
-                  className={`card h-100 cursor-pointer ${selectedType === 'employer' ? 'border-primary' : ''}`}
+                  className={`${styles.card} ${selectedType === 'employer' ? styles.selected : ''}`}
                   onClick={() => setSelectedType('employer')}
                 >
-                  <div className="card-body text-center p-4">
-                    <div className="icon-container mb-3">
+                  <div className={styles.bg}>
+                    <div className=" icon-container mb-3">
                       <FaBuilding size={40} className="text-primary" />
                     </div>
                     <h3 className="h4">Employer</h3>
@@ -37,21 +38,22 @@ export default function Register() {
                     </ul>
                     <Link 
                       href="/register/employer" 
-                      className={`btn ${selectedType === 'employer' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
+                      className={` ${styles.btn} btn ${selectedType === 'employer' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
                     >
                       Continue as Employer
                     </Link>
                   </div>
+                  <div className={styles.blob}></div>
                 </div>
               </div>
 
               {/* Consultancy Card */}
               <div className="col-md-4">
                 <div 
-                  className={`card h-100 cursor-pointer ${selectedType === 'consultancy' ? 'border-primary' : ''}`}
+                  className={`${styles.card} ${selectedType === 'consultancy' ? styles.selected : ''}`}
                   onClick={() => setSelectedType('consultancy')}
                 >
-                  <div className="card-body text-center p-4">
+                  <div className={styles.bg}>
                     <div className="icon-container mb-3">
                       <FaHandshake size={40} className="text-primary" />
                     </div>
@@ -64,21 +66,22 @@ export default function Register() {
                     </ul>
                     <Link 
                       href="/register/consultancy" 
-                      className={`btn ${selectedType === 'consultancy' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
+                      className={` ${styles.btn} btn ${selectedType === 'consultancy' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
                     >
                       Continue as Consultancy
                     </Link>
                   </div>
+                  <div className={styles.blob}></div>
                 </div>
               </div>
 
               {/* Candidate Card */}
               <div className="col-md-4">
                 <div 
-                  className={`card h-100 cursor-pointer ${selectedType === 'candidate' ? 'border-primary' : ''}`}
+                  className={`${styles.card} ${selectedType === 'candidate' ? styles.selected : ''}`}
                   onClick={() => setSelectedType('candidate')}
                 >
-                  <div className="card-body text-center p-4">
+                  <div className={styles.bg}>
                     <div className="icon-container mb-3">
                       <FaUserTie size={40} className="text-primary" />
                     </div>
@@ -91,18 +94,19 @@ export default function Register() {
                     </ul>
                     <Link 
                       href="/register/candidate" 
-                      className={`btn ${selectedType === 'candidate' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
+                      className={` ${styles.btn} btn ${selectedType === 'candidate' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
                     >
                       Continue as Candidate
                     </Link>
                   </div>
+                  <div className={styles.blob}></div>
                 </div>
               </div>
             </div>
 
             <div className="text-center mt-4">
               <p className="mb-0">
-                Already have an account? <Link href="/login" className="text-primary">Login</Link>
+                Already have an account? <Link href="/login" className={`${styles.link} text-dark fw-bold text-decoration-none`}>Login</Link>
               </p>
             </div>
           </div>
@@ -110,4 +114,4 @@ export default function Register() {
       </div>
     </div>
   );
-} 
+}

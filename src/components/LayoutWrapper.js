@@ -9,12 +9,13 @@ export default function LayoutWrapper({ children }) {
   const isDashboard = pathname?.startsWith('/dashboard');
   const isLogin = pathname?.startsWith('/login');
   const isForgotPassword = pathname?.startsWith('/forgot-password');
+  const isRegister = pathname?.startsWith('/register');
 
   return (
     <>
-      {!isDashboard && !isLogin && !isForgotPassword && <Navbar />}
+      {!isDashboard && !isLogin && !isForgotPassword && !isRegister && <Navbar />}
       {children}
-      {!isDashboard && !isLogin && !isForgotPassword && <Footer />}
+      {!isDashboard && !isLogin && !isForgotPassword && !isRegister && <Footer />}
     </>
   );
 }
