@@ -1,111 +1,117 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaBuilding, FaHandshake, FaUserTie } from 'react-icons/fa';
 import styles from './page.module.css';
 
 export default function Register() {
   const [selectedType, setSelectedType] = useState('');
+  const [registrationData, setRegistrationData] = useState(null);
+  const [isRegistrationData, setIsRegistrationData] = useState(false);
+
+  useEffect(() => {
+    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+    if (registrationData) {
+      setRegistrationData(registrationData);
+      setIsRegistrationData(true);
+      console.log("registrationData before removing from sessionStorage: ",registrationData);
+      // sessionStorage.removeItem('registrationData'); // Clean up
+      // console.log("registrationData after removing from sessionStorage: ",registrationData);
+    }
+  }, []);
 
   return (
-    <div className={`${styles.wrapper} register-page py-5`}>
-      <div className="container">
+    <div className={`${styles.wrapper} register-page py-3 py-md-5`}>
+      <div className="container px-3 px-sm-4">
         <div className="row justify-content-center">
-          <div className="col-lg-8">
-            <div className="text-center mb-5">
-              <h1 className="display-4 fw-bold">Create Your Account</h1>
-              <p className="lead text-muted">Choose your account type to get started</p>
+          <div className="col-12 col-lg-10 col-xl-8">
+            <div className="text-center mb-4 mb-md-5 px-2">
+              <h1 className="display-5 fw-bold mb-2">Create Your Account</h1>
+              {isRegistrationData ? 
+              <h1 className={`${styles.responsiveaccountmessage}`}>
+                No account found for{" "}
+                <span className={`${styles.responsiveemail}`}>
+                  {registrationData.email}
+                </span>
+              </h1> :
+              <></>
+              }
+              <p className="lead text-muted mb-0">Choose your account type to get started</p>
             </div>
 
-            <div className="row g-4">
-              {/* Employer Card */}
-              <div className="col-md-4">
-                <div 
-                  className={`${styles.card} ${selectedType === 'employer' ? styles.selected : ''}`}
-                  onClick={() => setSelectedType('employer')}
-                >
-                  <div className={styles.bg}>
-                    <div className=" icon-container mb-3">
-                      <FaBuilding size={40} className="text-primary" />
+            <div className="row g-3 g-md-4 justify-content-center">
+              {[
+                {
+                  type: 'employer',
+                  icon: <FaBuilding size={32} className="text-primary" />,
+                  title: "Employer",
+                  desc: "Post jobs and find candidates",
+                  features: [
+                    "Post unlimited jobs",
+                    "Access CV database",
+                    "Manage applications"
+                  ],
+                  href: "/register/employer"
+                },
+                {
+                  type: 'consultancy',
+                  icon: <FaHandshake size={32} className="text-primary" />,
+                  title: "Consultancy",
+                  desc: "Bid on jobs and find clients",
+                  features: [
+                    "Bid on projects",
+                    "Manage candidates",
+                    "Track progress"
+                  ],
+                  href: "/register/consultancy"
+                },
+                {
+                  type: 'candidate',
+                  icon: <FaUserTie size={32} className="text-primary" />,
+                  title: "Candidate",
+                  desc: "Find jobs and get hired",
+                  features: [
+                    "Browse jobs",
+                    "Upload CV",
+                    "Track applications"
+                  ],
+                  href: "/register/candidate"
+                }
+              ].map((card) => (
+                <div key={card.type} className="col-12 col-sm-6 col-lg-4">
+                  <div 
+                    className={`${styles.card} ${selectedType === card.type ? styles.selected : ''}`}
+                    onClick={() => setSelectedType(card.type)}
+                  >
+                    <div className={styles.bg}>
+                      <div className="icon-container mb-3">
+                        {card.icon}
+                      </div>
+                      <h3 className="h5 mb-2">{card.title}</h3>
+                      <p className="text-muted small mb-3">{card.desc}</p>
+                      <ul className="list-unstyled text-start small mb-3">
+                        {card.features.map((feature, i) => (
+                          <li key={i} className="mb-1">✓ {feature}</li>
+                        ))}
+                      </ul>
+                      <Link 
+                        href={card.href} 
+                        className={`${styles.btn} btn btn-sm ${
+                          selectedType === card.type ? 'btn-primary' : 'btn-outline-primary'
+                        } w-100 mt-auto`}
+                      >
+                        Continue as {card.title}
+                      </Link>
                     </div>
-                    <h3 className="h4">Employer</h3>
-                    <p className="text-muted">Post jobs and find candidates</p>
-                    <ul className="list-unstyled text-start">
-                      <li className="mb-2">✓ Post unlimited jobs</li>
-                      <li className="mb-2">✓ Access CV database</li>
-                      <li className="mb-2">✓ Manage applications</li>
-                    </ul>
-                    <Link 
-                      href="/register/employer" 
-                      className={` ${styles.btn} btn ${selectedType === 'employer' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
-                    >
-                      Continue as Employer
-                    </Link>
+                    <div className={styles.blob}></div>
                   </div>
-                  <div className={styles.blob}></div>
                 </div>
-              </div>
-
-              {/* Consultancy Card */}
-              <div className="col-md-4">
-                <div 
-                  className={`${styles.card} ${selectedType === 'consultancy' ? styles.selected : ''}`}
-                  onClick={() => setSelectedType('consultancy')}
-                >
-                  <div className={styles.bg}>
-                    <div className="icon-container mb-3">
-                      <FaHandshake size={40} className="text-primary" />
-                    </div>
-                    <h3 className="h4">Consultancy</h3>
-                    <p className="text-muted">Bid on jobs and find clients</p>
-                    <ul className="list-unstyled text-start">
-                      <li className="mb-2">✓ Bid on projects</li>
-                      <li className="mb-2">✓ Manage candidates</li>
-                      <li className="mb-2">✓ Track progress</li>
-                    </ul>
-                    <Link 
-                      href="/register/consultancy" 
-                      className={` ${styles.btn} btn ${selectedType === 'consultancy' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
-                    >
-                      Continue as Consultancy
-                    </Link>
-                  </div>
-                  <div className={styles.blob}></div>
-                </div>
-              </div>
-
-              {/* Candidate Card */}
-              <div className="col-md-4">
-                <div 
-                  className={`${styles.card} ${selectedType === 'candidate' ? styles.selected : ''}`}
-                  onClick={() => setSelectedType('candidate')}
-                >
-                  <div className={styles.bg}>
-                    <div className="icon-container mb-3">
-                      <FaUserTie size={40} className="text-primary" />
-                    </div>
-                    <h3 className="h4">Candidate</h3>
-                    <p className="text-muted">Find jobs and get hired</p>
-                    <ul className="list-unstyled text-start">
-                      <li className="mb-2">✓ Browse jobs</li>
-                      <li className="mb-2">✓ Upload CV</li>
-                      <li className="mb-2">✓ Track applications</li>
-                    </ul>
-                    <Link 
-                      href="/register/candidate" 
-                      className={` ${styles.btn} btn ${selectedType === 'candidate' ? 'btn-primary' : 'btn-outline-primary'} w-100`}
-                    >
-                      Continue as Candidate
-                    </Link>
-                  </div>
-                  <div className={styles.blob}></div>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="text-center mt-4">
-              <p className="mb-0">
+            <div className="text-center mt-3 mt-md-4 px-2">
+              <p className="mb-0 small">
                 Already have an account? <Link href="/login" className={`${styles.link} text-dark fw-bold text-decoration-none`}>Login</Link>
               </p>
             </div>

@@ -23,6 +23,8 @@ export default function GoogleLoginButton() {
         });
 
         const userInfo = await response.json();
+        // console.log("google login user info: ",userInfo);
+
 
         // Now send ID token or email to your backend
         const backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google-login/`, {
@@ -32,7 +34,7 @@ export default function GoogleLoginButton() {
         });
 
         const data = await backendRes.json();
-        console.log("google login data response: ",data);
+        // console.log("google login data response: ",data);
 
         
 
@@ -44,7 +46,11 @@ export default function GoogleLoginButton() {
 
         }else{
           setError(data.error);
-          console.log("google login error: ",data.error);
+          if(data.error === "User not found"){
+            sessionStorage.setItem('registrationData', JSON.stringify(data));
+            router.push("/register");
+          }
+          // console.log("google login error: ",data);
         }
       } catch (err) {
         console.error('Google login error:', err);
