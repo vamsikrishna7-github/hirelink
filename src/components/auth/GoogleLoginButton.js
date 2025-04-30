@@ -47,7 +47,7 @@ export default function GoogleLoginButton() {
         }else{
           setError(data.error);
           if(data.error === "User not found"){
-            sessionStorage.setItem('registrationData', JSON.stringify(data));
+            sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
             router.push("/register");
           }
           // console.log("google login error: ",data);
