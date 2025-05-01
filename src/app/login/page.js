@@ -160,7 +160,8 @@ export default function Login() {
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
-              
+            </form>
+            
               <div className="d-flex align-items-center justify-content-center my-2">
                 <hr className="flex-grow-1" style={{borderColor: '#dee2e6'}} />
                 <span className={`${styles.secoundarytext} px-2`} style={{fontSize: '13px'}}>or continue with</span>
@@ -171,9 +172,8 @@ export default function Login() {
               
               <div className="text-center mt-2">
                 <span className={`${styles.secoundarytext}`} style={{fontSize: '13px'}}>Don&apos;t have an account? </span>
-                <Link href="/register" className={`${styles.signupLink} text-decoration-none`} style={{fontSize: '13px'}}>Sign up</Link>
+                <Link href="/register" className={`${styles.signupLink} text-decoration-none fw-bold`} style={{fontSize: '13px'}}>Sign up</Link>
               </div>
-            </form>
           </div>
         </div>
       </div>

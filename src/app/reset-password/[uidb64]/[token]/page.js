@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import styles from './Forgot-password.module.css';
 import { FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import Link from 'next/link';
+
 
 export default function ResetPasswordPage({ params }) {
-  const { uidb64, token } = params;
+  const { uidb64, token } = useParams();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -55,18 +59,16 @@ export default function ResetPasswordPage({ params }) {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-12 col-md-8 col-lg-6">
-            <div className="card shadow-lg border-0 rounded-4">
-              <div className="card-body p-4 p-md-5">
-                <div className="text-center mb-4">
-                  <h1 className="h2 fw-bold text-primary mb-3">Reset Password</h1>
-                  <p className="text-muted mb-0">Enter your new password below</p>
-                </div>
-
-                {error && (
+    <div className={`container-fluid ${styles.loginContainer}`}>
+    <div className={`${styles.row} row justify-content-center align-items-center h-100`}>
+      <div className="col-11 col-sm-9 col-md-7 col-lg-4 col-xl-3">
+        <div className={`${styles.card} card border-0 p-3 p-sm-4 shadow-lg`} style={{backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '20px'}}>
+          <div className="text-center mb-3">
+            <h2 className={`${styles.header} mt-2`} style={{fontSize: '22px'}}>Reset Password</h2>
+            <p className="text-muted mb-0">Enter your new password below</p>
+          </div>
+          
+          {error && (
                   <div className="alert alert-danger rounded-3" role="alert">
                     <i className="bi bi-exclamation-circle me-2"></i>
                     {error}
@@ -80,81 +82,74 @@ export default function ResetPasswordPage({ params }) {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="needs-validation" noValidate>
-                  <div className="mb-4">
-                    <label htmlFor="password" className="form-label fw-medium">New Password</label>
-                    <div className="input-group input-group-lg">
-                      <span className="input-group-text bg-light border-end-0">
-                        <FaLock className="text-primary" />
-                      </span>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className="form-control border-start-0"
-                        id="password"
-                        placeholder="Enter new password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={8}
-                      />
-                      <button
-                        type="button"
-                        className="btn border-secondary"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label htmlFor="confirmPassword" className="form-label fw-medium">Confirm Password</label>
-                    <div className="input-group input-group-lg">
-                      <span className="input-group-text bg-light border-end-0">
-                        <FaLock className="text-primary" />
-                      </span>
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        className="form-control border-start-0"
-                        id="confirmPassword"
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        minLength={8}
-                      />
-                      <button
-                        type="button"
-                        className="btn border-secondary"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="d-grid">
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary btn-lg rounded-3 fw-medium"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Resetting...
-                        </>
-                      ) : (
-                        'Reset Password'
-                      )}
-                    </button>
-                  </div>
-                </form>
+          <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+            <div className="mb-2">
+              <label htmlFor="email" className={`${styles.label} form-label`} style={{fontSize: '14px'}}>New Password</label>
+              <div className="position-relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    className={`${styles.input} form-control rounded-4 pe-5`}
+                    style={{height: '42px', fontSize: '14px'}}
+                    id="password" 
+                    placeholder="Enter new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    className="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ zIndex: 5, color: '#6c757d', padding: '4px' }}
+                  >
+                    <span className={`${styles.passwordToggleIcon} pb-1 px-1 rounded-3`}>{showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}</span>
+                  </button>
               </div>
+              
+              <label htmlFor="email" className={`${styles.label} form-label`} style={{fontSize: '14px'}}>Confirm Password</label>
+              <div className="position-relative">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    className={`${styles.input} form-control rounded-4 pe-5`}
+                    style={{height: '42px', fontSize: '14px'}}
+                    id="confirmPassword" 
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    className="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ zIndex: 5, color: '#6c757d', padding: '4px' }}
+                  >
+                    <span className={`${styles.passwordToggleIcon} pb-1 px-1 rounded-3`}>{showConfirmPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}</span>
+                  </button>
+              </div>                           
             </div>
-          </div>
+            
+            <button 
+                type="submit" 
+                disabled={loading} 
+                className={`${styles.submitbtn} btn btn-primary w-100 mb-2 py-2 fw-bold`}
+                style={{height: '42px', fontSize: '14px'}}
+              >
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Resetting...
+                </>
+              ) : (
+                  'Reset Password'
+              )}
+            </button>
+            
+          </form>
         </div>
       </div>
     </div>
+  </div>
   );
+
 }

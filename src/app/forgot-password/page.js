@@ -99,7 +99,7 @@ export default function ForgotPassword() {
             
             <div className="text-center mt-2">
               <span className={`${styles.secoundarytext}`} style={{fontSize: '13px'}}>Back to </span>
-              <Link href="/login" className={`${styles.signupLink} text-decoration-none`} style={{fontSize: '13px'}}>Login</Link>
+              <Link href="/login" className={`${styles.signupLink} text-decoration-none fw-bold`} style={{fontSize: '13px'}}>Login</Link>
             </div>
           </form>
         </div>
