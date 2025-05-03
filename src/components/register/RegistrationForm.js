@@ -207,7 +207,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                 setIsOtpSent(true);
                 setResendTimer(300); // 5 minutes in seconds
             } else {
-                setErrors({ ...errors, email: data.message || 'Failed to send OTP' });
+                setErrors({ ...errors, email: data.error || 'Failed to send OTP' });
             }
         } catch (error) {
             setErrors({ ...errors, email: 'Failed to send OTP. Please try again.' });
