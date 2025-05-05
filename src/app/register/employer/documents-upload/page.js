@@ -1,5 +1,5 @@
 import React from 'react'
-import DocumentsUpload from '@/components/register/step4/documentsUpload'
+import DocumentsUpload from '@/components/register/step4/DocumentsUpload'
 
 export default function DocumentsUploadPage(data) {
   return (
