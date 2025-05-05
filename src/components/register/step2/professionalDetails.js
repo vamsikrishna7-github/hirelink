@@ -8,14 +8,25 @@ import 'react-phone-number-input/style.css';
 import Link from 'next/link';
 import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
+import { useRouter } from 'next/navigation';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
+  const [registrationData, setRegistrationData] = useState(null);
+  useEffect(() => {
+    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+    if (registrationData) {
+      setRegistrationData(registrationData);
+      console.log("registrationData before removing from sessionStorage: ",registrationData);
+    }
+  }, []);
+  const router = useRouter();
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('IN');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
     phone: '',
     website_url: '',
+    serverError: ''
   });
   const [formData, setFormData] = useState({
     company_name: '',
@@ -66,13 +77,63 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      // Add your form submission logic here
-      console.log('Form submitted:', formData);
-      setIsLoading(false);
+      try {
+        // First authenticate to get JWT token
+        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: registrationData.email,
+            password: registrationData.password
+          })
+        });
+
+        if (!loginResponse.ok) {
+          throw new Error('Authentication failed');
+        }
+
+        const { access } = await loginResponse.json();
+
+        // Update employer profile with the obtained token
+        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employer/profile/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${access}`
+          },
+          body: JSON.stringify({
+            company_name: formData.company_name,
+            phone: formData.phone,
+            company_size: formData.companySize,
+            designation: formData.designation,
+            website_url: formData.website_url
+          })
+        });
+        const data = await profileResponse.json();
+
+        if (!profileResponse.ok) {
+          console.log(data.website_url);
+          setErrors({ ...errors, website_url: data.website_url});
+          throw new Error('Failed to update profile');
+        }
+
+        // Clear the registration data from session storage
+        // sessionStorage.removeItem('registrationData');
+        
+        // Redirect to next step or dashboard
+        router.push('/register/employer/address');
+      } catch (error) {
+        console.error('Error:', error);
+        // setErrors({ ...errors, serverError: error.message });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -93,6 +154,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           <p className={`text-center mb-4 ${styles.loginPrompt}`}>
               {employer || consultancy ? <span>Please fill professional details to create your account</span> : <span>Please fill additional details to create your account</span>}
           </p>
+
 
           <form onSubmit={handleSubmit}>
 

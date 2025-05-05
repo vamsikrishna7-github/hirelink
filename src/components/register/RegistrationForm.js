@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaKey, FaShieldAlt, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import {FiEye, FiEyeOff} from 'react-icons/fi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 
 export default function SignUpPage({ employer, consultancy, candidate }) {
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isOtpValid, setIsOtpValid] = useState(false);
@@ -162,9 +165,9 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
             const data = await response.json();
             
             if (response.ok) {
-                // Handle successful registration
-                console.log('Registration successful:', data);
-                // You might want to redirect to the next step or show a success message
+                data.password = formData.password;
+                sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
+                router.push('/register/employer/professional-details');
             } else {
                 // Handle registration errors
                 if (data.email) {

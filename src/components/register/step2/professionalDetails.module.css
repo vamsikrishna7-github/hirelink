@@ -263,7 +263,7 @@
     /* Add responsive adjustments */
   @media (max-width: 768px) {
     .formControl {
-      border-radius: 20px;
+      border-radius: 20px !important;
       height: 50px!important;
     }
     .inputLabel {
