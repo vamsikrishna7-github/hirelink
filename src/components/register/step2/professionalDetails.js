@@ -1,7 +1,7 @@
 "use client";
 import styles from './professionalDetails.module.css';
 import { useState, useEffect } from 'react';
-import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner, FaBriefcase } from 'react-icons/fa';
+import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner, FaBriefcase, FaMapMarkerAlt, FaCity } from 'react-icons/fa';
 import {FiEye, FiEyeOff, FiLink, FiUsers} from 'react-icons/fi';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -9,16 +9,9 @@ import Link from 'next/link';
 import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
+import IdentifyUser from '@/components/register/IdentifyUser';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
-  const [registrationData, setRegistrationData] = useState(null);
-  useEffect(() => {
-    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
-    if (registrationData) {
-      setRegistrationData(registrationData);
-      console.log("registrationData before removing from sessionStorage: ",registrationData);
-    }
-  }, []);
   const router = useRouter();
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('IN');
@@ -26,7 +19,8 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
   const [errors, setErrors] = useState({
     phone: '',
     website_url: '',
-    serverError: ''
+    serverError: '',
+    portfolio_url: '',
   });
   const [formData, setFormData] = useState({
     company_name: '',
@@ -34,22 +28,48 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     companySize: '',
     designation: '',
     website_url: '',
+    gender: '',
+    currentCity: '',
+    preferredCity: '',
+    portfolio_url: '',
   });
 
+  const [registrationData, setRegistrationData] = useState('');
+  useEffect(() => {
+    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+    if (registrationData) {
+      setRegistrationData(registrationData);
+      console.log("registrationData before removing from sessionStorage: ",registrationData);
+    }
+  }, []);
+
+
   const validateForm = () => {
-    // Required fields validation
-    if (!formData.company_name) return false;
-    if (!formData.phone) return false;
-    if (!formData.companySize) return false;
-    if (!formData.designation) return false;
+    if (registrationData.user_type === 'candidate') {
+      // Required fields validation for candidates
+      if (!formData.gender) return false;
+      if (!formData.phone) return false;
+      if (!formData.currentCity) return false;
+      if (!formData.preferredCity) return false;
 
-    // Phone validation
-    const phoneError = validatePhone(formData.phone, selectedCountry);
-    if (phoneError) return false;
+      // Phone validation
+      const phoneError = validatePhone(formData.phone, selectedCountry);
+      if (phoneError) return false;
 
+      return true;
+    } else {
+      // Required fields validation for employer/consultancy
+      if (!formData.company_name) return false;
+      if (!formData.phone) return false;
+      if (!formData.companySize) return false;
+      if (!formData.designation) return false;
 
+      // Phone validation
+      const phoneError = validatePhone(formData.phone, selectedCountry);
+      if (phoneError) return false;
 
-    return true;
+      return true;
+    }
   };
 
   const handlePhoneChange = (value) => {
@@ -100,34 +120,57 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
         const { access } = await loginResponse.json();
 
-        // Update employer profile with the obtained token
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employer/profile/`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access}`
-          },
-          body: JSON.stringify({
-            company_name: formData.company_name,
-            phone: formData.phone,
-            company_size: formData.companySize,
-            designation: formData.designation,
-            website_url: formData.website_url
-          })
-        });
+        const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/api/${registrationData.user_type}/profile/`
+
+        var profileResponse;
+        if(registrationData.user_type !== 'candidate'){
+          profileResponse = await fetch(apiURL, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${access}`
+            },
+            body: JSON.stringify({
+              company_name: formData.company_name,
+              phone_number: formData.phone,
+              company_size: formData.companySize,
+              designation: formData.designation,
+              website_url: formData.website_url
+            })
+          });
+        }else {
+          profileResponse = await fetch(apiURL, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${access}`
+            },
+            body: JSON.stringify({
+              gender: formData.gender,
+              phone_number: formData.phone,
+              city: formData.currentCity,
+              preferenced_city: formData.preferredCity,
+              portfolio_website: formData.portfolio_url,
+            })
+          });
+        }
+
         const data = await profileResponse.json();
 
         if (!profileResponse.ok) {
           console.log(data.website_url);
-          setErrors({ ...errors, website_url: data.website_url});
+          setErrors({ ...errors, website_url: data.website_url || data.portfolio_url});
           throw new Error('Failed to update profile');
         }
 
         // Clear the registration data from session storage
         // sessionStorage.removeItem('registrationData');
-        
-        // Redirect to next step or dashboard
-        router.push('/register/employer/address');
+        if(registrationData.user_type !== 'candidate'){
+          router.push(`/register/${registrationData.user_type}/address`);
+        }
+        else{
+          router.push(`/register/${registrationData.user_type}/education`);
+        } 
       } catch (error) {
         console.error('Error:', error);
         // setErrors({ ...errors, serverError: error.message });
@@ -135,6 +178,30 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         setIsLoading(false);
       }
     }
+  };
+
+  const validatePortfolioURL = (url) => {
+    if (!url) return ""; // Skip validation if empty (since it's optional)
+    
+    // Basic URL regex (supports http/https/ftp)
+    const urlPattern = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+    
+    if (!urlPattern.test(url)) {
+      return "Please enter a valid URL (e.g., https://example.com)";
+    }
+    
+    return ""; // No error
+  };
+
+  const handlePortfolioChange = (e) => {
+    const { value } = e.target;
+    setFormData({ ...formData, portfolio_url: value });
+    
+    // Validate on change (or use onBlur for validation after focus loss)
+    setErrors({
+      ...errors,
+      portfolio_url: validatePortfolioURL(value),
+    });
   };
 
   return (
@@ -148,6 +215,8 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               <span className={styles.totalPages}>/4</span>
             </span>
           </div>
+
+          <IdentifyUser />
           
           <h1 className={`card-title ${styles.title}`}>Creating Your <span className={styles.userType}>{employer ? 'Employer' : consultancy ? 'Consultancy' : 'Candidate'}</span> Account</h1>
           
@@ -157,24 +226,100 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
 
           <form onSubmit={handleSubmit}>
+            {registrationData.user_type !== 'candidate' && (
+              <div className="mb-3">
+                <label className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY NAME' : consultancy ? 'CONSULTANCY NAME' : ''}</label>
+                <div className={`input-group ${styles.otpGroup}`}>
+                    <div className={styles.iconInputWrapper}>
+                    <FaBuilding className={styles.inputIcon} />
+                    <input 
+                        type="text" 
+                        className={`form-control rounded-end-0 ${styles.formControl}`}
+                        placeholder="Enter company name" 
+                        value={formData.company_name}
+                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                        required
+                    />
+                    </div>
+                </div>
 
-            <div className="mb-3">
-              <label className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY NAME' : consultancy ? 'CONSULTANCY NAME' : ''}</label>
-              <div className={`input-group ${styles.otpGroup}`}>
-                  <div className={styles.iconInputWrapper}>
-                  <FaBuilding className={styles.inputIcon} />
-                  <input 
-                      type="text" 
-                      className={`form-control rounded-end-0 ${styles.formControl}`}
-                      placeholder="Enter company name" 
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      required
-                  />
-                  </div>
               </div>
+            )}
 
-            </div>
+            {registrationData.user_type === 'candidate' && (
+              <div className="mb-3">
+                <label className={`form-label ${styles.inputLabel}`}>GENDER</label>
+                <div className={`input-group ${styles.otpGroup}`}>
+                  <div className={`d-flex flex-wrap align-items-center gap-4 ${styles.radioGroup}`}>
+                    {/* Male */}
+                    <div className="form-check">
+                      <input
+                        className={`form-check-input ${styles.radioInput}`}
+                        type="radio"
+                        name="gender"
+                        id="male"
+                        value="male"
+                        checked={formData.gender === 'male'}
+                        onChange={() => setFormData({ ...formData, gender: 'male' })}
+                      />
+                      <label className={`form-check-label ${styles.radioLabel}`} htmlFor="male">
+                        Male
+                      </label>
+                    </div>
+
+                    {/* Female */}
+                    <div className="form-check">
+                      <input
+                        className={`form-check-input ${styles.radioInput}`}
+                        type="radio"
+                        name="gender"
+                        id="female"
+                        value="female"
+                        checked={formData.gender === 'female'}
+                        onChange={() => setFormData({ ...formData, gender: 'female' })}
+                      />
+                      <label className={`form-check-label ${styles.radioLabel}`} htmlFor="female">
+                        Female
+                      </label>
+                    </div>
+
+                    {/* Non-Binary */}
+                    <div className="form-check">
+                      <input
+                        className={`form-check-input ${styles.radioInput}`}
+                        type="radio"
+                        name="gender"
+                        id="non-binary"
+                        value="non-binary"
+                        checked={formData.gender === 'non-binary'}
+                        onChange={() => setFormData({ ...formData, gender: 'non-binary' })}
+                      />
+                      <label className={`form-check-label ${styles.radioLabel}`} htmlFor="non-binary">
+                        Non-Binary
+                      </label>
+                    </div>
+
+                    {/* Other */}
+                    <div className="form-check">
+                      <input
+                        className={`form-check-input ${styles.radioInput}`}
+                        type="radio"
+                        name="gender"
+                        id="other"
+                        value="other"
+                        checked={formData.gender === 'other'}
+                        onChange={() => setFormData({ ...formData, gender: 'other' })}
+                      />
+                      <label className={`form-check-label ${styles.radioLabel}`} htmlFor="other">
+                        Other
+                      </label>
+                    </div>
+
+
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mb-3">
               <label className={`form-label ${styles.inputLabel}`}>PHONE NUMBER</label>
@@ -200,45 +345,92 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               )}
             </div>
 
-            <div className="row mb-3">
+            {registrationData.user_type !== 'candidate' && (
+              <div className="row mb-3">
+                <div className="col-md-6 mb-3 mb-md-0">
+                  <label htmlFor="firstName" className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY SIZE' : consultancy ? 'CONSULTANCY SIZE' : ''}</label>
+                  <div className={styles.iconInputWrapper}>
+                    <FiUsers className={styles.inputIcon} />
+                    <select 
+                        id="companySize"
+                        className={`form-select ${styles.formControl}`}
+                        value={formData.companySize || ''}
+                        onChange={(e) => setFormData({...formData, companySize: e.target.value})}
+                    >
+                        <option value="" disabled>Select company size</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-100">51-100 employees</option>
+                        <option value="101-200">101-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="501-1000">501-1000 employees</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <label htmlFor="lastName" className={`form-label ${styles.inputLabel}`}>DESIGNATION</label>
+                  <div className={styles.iconInputWrapper}>
+                    <FaBriefcase className={styles.inputIcon} />
+                    <input 
+                      type="text" 
+                      className={`form-control ${styles.formControl}`} 
+                      id="designation" 
+                      placeholder="Designation" 
+                      value={formData.designation}
+                      onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )} 
+
+            {registrationData.user_type === 'candidate' && (
+              <div className="row mb-3">
+              {/* Current City Selection (Dropdown) */}
               <div className="col-md-6 mb-3 mb-md-0">
-                <label htmlFor="firstName" className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY SIZE' : consultancy ? 'CONSULTANCY SIZE' : ''}</label>
+                <label htmlFor="currentCity" className={`form-label ${styles.inputLabel}`}>CURRENT CITY</label>
                 <div className={styles.iconInputWrapper}>
-                  <FiUsers className={styles.inputIcon} />
+                  <FaCity className={styles.inputIcon} /> {/* Using city icon */}
                   <select 
-                      id="companySize"
-                      className={`form-select ${styles.formControl}`}
-                      value={formData.companySize || ''}
-                      onChange={(e) => setFormData({...formData, companySize: e.target.value})}
+                    id="currentCity"
+                    className={`form-select ${styles.formControl}`}
+                    value={formData.currentCity || ''}
+                    onChange={(e) => setFormData({...formData, currentCity: e.target.value})}
+                    required
                   >
-                      <option value="" disabled>Select company size</option>
-                      <option value="1-10">1-10 employees</option>
-                      <option value="11-50">11-50 employees</option>
-                      <option value="51-100">51-100 employees</option>
-                      <option value="101-200">101-200 employees</option>
-                      <option value="201-500">201-500 employees</option>
-                      <option value="501-1000">501-1000 employees</option>
+                    <option value="" disabled>Select your city</option>
+                    <option value="new-york">Hyderabad</option>
+                    <option value="london">Chennai</option>
+                    <option value="tokyo">Tokyo</option>
+                    <option value="delhi">Delhi</option>
+                    <option value="dubai">Dubai</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
               </div>
-
+            
+              {/* Preferred City Input (Text) */}
               <div className="col-md-6">
-                <label htmlFor="lastName" className={`form-label ${styles.inputLabel}`}>DESIGNATION</label>
+                <label htmlFor="preferredCity" className={`form-label ${styles.inputLabel}`}>PREFERRED CITY</label>
                 <div className={styles.iconInputWrapper}>
-                  <FaBriefcase className={styles.inputIcon} />
+                  <FaMapMarkerAlt className={styles.inputIcon} /> {/* Using location icon */}
                   <input 
                     type="text" 
                     className={`form-control ${styles.formControl}`} 
-                    id="designation" 
-                    placeholder="Designation" 
-                    value={formData.designation}
-                    onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                    id="preferredCity" 
+                    placeholder="Enter preferred city" 
+                    value={formData.preferredCity}
+                    onChange={(e) => setFormData({ ...formData, preferredCity: e.target.value })}
                     required
                   />
                 </div>
               </div>
             </div>
+            )}
 
+          {registrationData.user_type !== 'candidate' && (
             <div className="mb-4">
               <label htmlFor="website_url" className={`form-label ${styles.inputLabel}`}>Website URL(optional)</label>
               <div className={`${styles.iconInputWrapper}`}>
@@ -259,6 +451,34 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
                   </div>
               )}
             </div>
+          )}
+
+          {registrationData.user_type === 'candidate' && (
+            <div className="mb-4">
+              <label htmlFor="portfolio_url" className={`form-label ${styles.inputLabel}`}>
+                Portfolio URL (optional)
+              </label>
+              <div className={styles.iconInputWrapper}>
+                <FiLink className={styles.inputIcon} />
+                <input
+                  type="text"
+                  className={`form-control ${styles.formControl} ${
+                    errors.portfolio_url ? styles.inputError : ""
+                  }`}
+                  id="portfolio_url"
+                  placeholder="https://www.yourportfolio.com"
+                  value={formData.portfolio_url}
+                  onChange={handlePortfolioChange}
+                />
+              </div>
+              {errors.portfolio_url && (
+                <div className={styles.errorMessage}>
+                  <FaExclamationCircle className="me-2" />
+                  {errors.portfolio_url}
+                </div>
+              )}
+            </div>
+          )}  
 
             <div className="d-flex justify-content-between align-items-center mt-4">
               <Link href="/register" type="button" className={`btn ${styles.backButton} d-none`}>

@@ -36,7 +36,7 @@ export default function StatusPage() {
 
       // Update status if it has changed
       if (newStatus !== status) {
-        setStatus(newStatus)
+          setStatus(newStatus)
       }
 
       // If status is approved or rejected, stop polling

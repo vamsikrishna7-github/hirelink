@@ -16,13 +16,13 @@ export default function RootLayout({ children }) {
     <GoogleOAuthProvider clientId="578224276104-sk0t3bvkn2qerllusiaibg6t0k348g31.apps.googleusercontent.com">
     <html lang="en">
       <body>
-        <BootstrapClient />
         <LayoutWrapper>
           <IsHome />
           <main className="min-vh-100">
             {children}
           </main>
         </LayoutWrapper>
+        <BootstrapClient />
       </body>
     </html>
     </GoogleOAuthProvider>

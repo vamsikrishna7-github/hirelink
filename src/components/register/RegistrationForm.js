@@ -33,7 +33,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
       last_name: '',
       password: '',
       re_password: '',
-      user_type: 'employer',
+      user_type: employer ? 'employer' : (consultancy ? 'consultancy' : 'candidate'),
       otp: '',
     });
 
@@ -158,7 +158,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                     password: formData.password,
                     re_password: formData.password,
                     phone: "0000000000",
-                    user_type: 'employer'
+                    user_type: formData.user_type
                 }),
             });
 
@@ -167,7 +167,13 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
             if (response.ok) {
                 data.password = formData.password;
                 sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
-                router.push('/register/employer/professional-details');
+                if (employer) {
+                    router.push('/register/employer/professional-details');
+                  } else if(consultancy) {
+                    router.push('/register/consultancy/professional-details');
+                  }else {
+                    router.push('/register/candidate/additional-details');
+                  }
             } else {
                 // Handle registration errors
                 if (data.email) {

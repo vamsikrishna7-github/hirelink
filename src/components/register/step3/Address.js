@@ -2,16 +2,12 @@
 import styles from './address.module.css';
 import { useState, useEffect } from 'react';
 import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner, FaBriefcase, FaMapMarkerAlt, FaCity, FaGlobeAmericas, FaMap, FaEnvelope, FaLandmark } from 'react-icons/fa';
-import {FiEye, FiEyeOff, FiLink, FiUsers} from 'react-icons/fi';
-import { MdPlace } from 'react-icons/md';
 import Link from 'next/link';
-import validatePhone from '@/utils/validatePhone';
-import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const router = useRouter();
-  const [registrationData, setRegistrationData] = useState(null);
+  const [registrationData, setRegistrationData] = useState('');
   const [formData, setFormData] = useState({
     street_address: '',
     locality: '',
@@ -39,7 +35,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     const regData = JSON.parse(sessionStorage.getItem('registrationData'));
     if (regData) {
       setRegistrationData(regData);
-      console.log("registrationData before removing from sessionStorage: ", regData);
+      console.log("registrationData /address sessionStorage: ", regData);
     }
   }, []);
 
@@ -84,7 +80,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
       const fullAddress = `${formData.street_address}, ${formData.locality}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.pincode}`;
 
       // Update employer profile with address details
-      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employer/profile/`, {
+      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/${registrationData.user_type}/profile/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +101,8 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
       // sessionStorage.removeItem('registrationData');
       
       // Redirect to next step or dashboard
-      router.push('/register/employer/documents-upload');
+      router.push(`/register/${registrationData.user_type}/documents-upload`);
+
     } catch (error) {
       console.error('Error:', error);
       setErrors({ ...errors, serverError: error.message });
@@ -128,7 +125,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
           <h1 className={`card-title ${styles.title}`}>
             Creating Your <span className={styles.userType}>
-              {employer ? 'Employer' : consultancy ? 'Consultancy' : 'Candidate'}
+              {registrationData.user_type}
             </span> Account
           </h1>
 
