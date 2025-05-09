@@ -83,7 +83,7 @@ export default function Login() {
         try {
           const registrationData = {
             email: email,
-            password: password,
+            access: authData.access,
             user_type: profileData.user_type,
             reg_step: profileData.registration_step,
             reg_user_id: profileData.id,

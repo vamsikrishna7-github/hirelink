@@ -10,6 +10,7 @@ import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { handleTokenExpiration } from '@/utils/authUtils';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
@@ -33,35 +34,27 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
   const fetchEducations = async () => {
     try {
-      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: registrationData.email,
-          password: registrationData.password
-        })
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Authentication failed');
-      }
-
-      const { access } = await loginResponse.json();
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educations/`, {
         headers: {
-          'Authorization': `Bearer ${access}`
+          'Authorization': `Bearer ${registrationData.access}`
         }
       });
+      const data = await response.json();
 
       if (response.ok) {
-        const data = await response.json();
         setEducationEntries(data);
+      } else {
+        if (handleTokenExpiration(data, router)) {
+          return;
+        }
+        setErrors({ ...errors, session: 'Failed to fetch education details' });
       }
     } catch (error) {
       console.error('Error fetching educations:', error);
+      if (handleTokenExpiration(error, router)) {
+        return;
+      }
+      setErrors({ ...errors, session: 'Failed to fetch education details' });
     }
   };
 
@@ -105,27 +98,11 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     try {
       const entry = educationEntries[index];
       if (entry.id) {
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: registrationData.email,
-            password: registrationData.password
-          })
-        });
-
-        if (!loginResponse.ok) {
-          throw new Error('Authentication failed');
-        }
-
-        const { access } = await loginResponse.json();
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educations/${entry.id}/`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${access}`
+            'Authorization': `Bearer ${registrationData.access}`
           }
         });
 
@@ -155,69 +132,44 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      setIsLoading(true);
-      try {
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: registrationData.email,
-            password: registrationData.password
-          })
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educations/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${registrationData.access}`
+        },
+        body: JSON.stringify(educationEntries[currentEntryIndex])
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update registration step
+        const updatedData = { ...registrationData, reg_step: 3 };
+        Cookies.set('registrationData', JSON.stringify(updatedData), {
+          expires: 0.0208, // 30 minutes
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict'
         });
-
-        if (!loginResponse.ok) {
-          throw new Error('Authentication failed');
+        router.push('/register/candidate/experience');
+      } else {
+        if (handleTokenExpiration(data, router)) {
+          return;
         }
-
-        const { access } = await loginResponse.json();
-
-        const currentEntry = educationEntries[currentEntryIndex];
-        const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/api/educations/${currentEntry.id ? `${currentEntry.id}/` : ''}`;
-        
-        const response = await fetch(apiURL, {
-          method: currentEntry.id ? 'PATCH' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access}`
-          },
-          body: JSON.stringify({
-            education_type: currentEntry.education_type,
-            school_name: currentEntry.school_name,
-            degree: currentEntry.degree,
-            field_of_study: currentEntry.field_of_study,
-            start_date: currentEntry.start_date,
-            end_date: currentEntry.end_date,
-            grade: currentEntry.grade
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save education');
-        }
-
-        if (currentEntryIndex === educationEntries.length - 1) {
-          if(registrationData){
-            registrationData.reg_step = 5;
-            Cookies.set('registrationData', JSON.stringify(registrationData), {
-              expires: 0.0208, // 30 minutes
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'Strict'
-            });
-          }
-          router.push('/register/candidate/experience');
-        } else {
-          setCurrentEntryIndex(currentEntryIndex + 1);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        setErrors({ ...errors, submit: error.message });
-      } finally {
-        setIsLoading(false);
+        setErrors({ ...errors, submit: 'Failed to save education details' });
       }
+    } catch (error) {
+      console.error('Error:', error);
+      if (handleTokenExpiration(error, router)) {
+        return;
+      }
+      setErrors({ ...errors, submit: 'Failed to save education details' });
+    } finally {
+      setIsLoading(false);
     }
   };
 

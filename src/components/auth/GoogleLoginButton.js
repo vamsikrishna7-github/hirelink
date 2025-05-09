@@ -39,10 +39,86 @@ export default function GoogleLoginButton() {
         
 
         if (backendRes.ok) {
-          document.cookie = `access_token=${data.access}; path=/; max-age=3600`;
-          document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
-          document.cookie = `user_type=${data.user_type}; path=/; max-age=3600`;
-          router.push(`/dashboard/${data.user_type}`);
+
+          const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${data.access}`,
+              "Content-Type": "application/json",
+            },
+            credentials: 'include',
+          });
+          const profileData = await profileResponse.json();
+
+          const userProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${data.access}`,
+              "Content-Type": "application/json",
+            },
+            credentials: 'include',
+          });
+          const userProfileData = await userProfile.json();
+
+          if((!profileData.completed_steps) || (userProfileData.profile.application_status !== "approved")){
+            try {
+              const registrationData = {
+                email: profileData.email,
+                access: data.access,
+                user_type: profileData.user_type,
+                reg_step: profileData.registration_step,
+                reg_user_id: profileData.id,
+                reg_completed_steps: profileData.completed_steps,
+                reg_application_status: userProfileData.profile.application_status
+              };
+            
+              Cookies.set('registrationData', JSON.stringify(registrationData), {
+                expires: 0.0208, // 30 minutes
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'Strict'
+              });
+              
+              
+        const reg_stepMap = {
+          employer: [
+            '/register',
+            '/register/employer',
+            '/register/employer/professional-details',
+            '/register/employer/address',
+            '/register/employer/documents-upload',
+            '/register/employer/application-status',
+          ],
+          consultancy: [
+            '/register',
+            '/register/consultancy',
+            '/register/consultancy/professional-details',
+            '/register/consultancy/address',
+            '/register/consultancy/documents-upload',
+            '/register/consultancy/application-status',
+          ],
+          candidate: [
+            '/register',
+            '/register/candidate',
+            '/register/candidate/additional-details',
+            '/register/candidate/education',
+            '/register/candidate/experience',
+            '/register/candidate/documents-upload',
+            '/register/candidate/application-status',
+          ],
+        };
+              console.log(`${reg_stepMap[profileData.user_type][profileData.registration_step-1]}`);
+              router.push(`${reg_stepMap[profileData.user_type][profileData.registration_step-1]}`);
+            } catch (err) {
+              console.error('Cookie set failed:', err);
+              setError('Unable to store registration data. Please try again.' );
+              return;
+            }
+          }else{
+            document.cookie = `access_token=${data.access}; path=/; max-age=3600`;
+            document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
+            document.cookie = `user_type=${data.user_type}; path=/; max-age=3600`;
+            router.push(`/dashboard/${data.user_type}`);
+          }
 
         }else{
           setError(data.error);

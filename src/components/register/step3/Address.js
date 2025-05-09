@@ -5,6 +5,7 @@ import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, F
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { handleTokenExpiration } from '@/utils/authUtils';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const router = useRouter();
@@ -63,24 +64,6 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
     setIsLoading(true);
     try {
-      // First authenticate to get JWT token
-      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: registrationData.email,
-          password: registrationData.password
-        })
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Authentication failed');
-      }
-
-      const { access } = await loginResponse.json();
-
       // Combine address fields into a single string
       const fullAddress = `${formData.street_address}, ${formData.locality}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.pincode}`;
 
@@ -89,7 +72,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access}`
+          'Authorization': `Bearer ${registrationData.access}`
         },
         body: JSON.stringify({
           [registrationData.user_type === 'employer' ? 'company_address' : 'office_address']: fullAddress
@@ -97,6 +80,10 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
       });
 
       if (!profileResponse.ok) {
+        const errorData = await profileResponse.json();
+        if (handleTokenExpiration(errorData, router)) {
+          return;
+        }
         throw new Error('Failed to update profile');
       }
 
@@ -118,6 +105,9 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
     } catch (error) {
       console.error('Error:', error);
+      if (handleTokenExpiration(error, router)) {
+        return;
+      }
       setErrors({ ...errors, serverError: error.message });
     } finally {
       setIsLoading(false);

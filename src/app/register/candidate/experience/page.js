@@ -6,13 +6,18 @@ import {FiEye, FiEyeOff, FiLink, FiUsers} from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { handleTokenExpiration } from '@/utils/authUtils';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [experienceEntries, setExperienceEntries] = useState([]);
   const [currentEntryIndex, setCurrentEntryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({
+    date: '',
+    submit: '',
+    session: '',
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -28,35 +33,27 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
   const fetchExperiences = async () => {
     try {
-      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: registrationData.email,
-          password: registrationData.password
-        })
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Authentication failed');
-      }
-
-      const { access } = await loginResponse.json();
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/experiences/`, {
         headers: {
-          'Authorization': `Bearer ${access}`
+          'Authorization': `Bearer ${registrationData.access}`
         }
       });
+      const data = await response.json();
 
       if (response.ok) {
-        const data = await response.json();
         setExperienceEntries(data);
+      } else {
+        if (handleTokenExpiration(data, router)) {
+          return;
+        }
+        setErrors({ ...errors, session: 'Failed to fetch experiences' });
       }
     } catch (error) {
       console.error('Error fetching experiences:', error);
+      if (handleTokenExpiration(error, router)) {
+        return;
+      }
+      setErrors({ ...errors, session: 'Failed to fetch experiences' });
     }
   };
 
@@ -102,27 +99,11 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     try {
       const entry = experienceEntries[index];
       if (entry.id) {
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: registrationData.email,
-            password: registrationData.password
-          })
-        });
-
-        if (!loginResponse.ok) {
-          throw new Error('Authentication failed');
-        }
-
-        const { access } = await loginResponse.json();
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/experiences/${entry.id}/`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${access}`
+            'Authorization': `Bearer ${registrationData.access}`
           }
         });
 
@@ -152,70 +133,44 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      setIsLoading(true);
-      try {
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: registrationData.email,
-            password: registrationData.password
-          })
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/experiences/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${registrationData.access}`
+        },
+        body: JSON.stringify(experienceEntries[currentEntryIndex])
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update registration step
+        const updatedData = { ...registrationData, reg_step: 4 };
+        Cookies.set('registrationData', JSON.stringify(updatedData), {
+          expires: 0.0208, // 30 minutes
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict'
         });
-
-        if (!loginResponse.ok) {
-          throw new Error('Authentication failed');
+        router.push('/register/candidate/documents-upload');
+      } else {
+        if (handleTokenExpiration(data, router)) {
+          return;
         }
-
-        const { access } = await loginResponse.json();
-
-        const currentEntry = experienceEntries[currentEntryIndex];
-        const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/api/experiences/${currentEntry.id ? `${currentEntry.id}/` : ''}`;
-        
-        const response = await fetch(apiURL, {
-          method: currentEntry.id ? 'PATCH' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access}`
-          },
-          body: JSON.stringify({
-            company_name: currentEntry.company_name,
-            designation: currentEntry.designation,
-            job_type: currentEntry.job_type,
-            location: currentEntry.location,
-            currently_working: currentEntry.currently_working,
-            job_description: currentEntry.job_description,
-            start_date: currentEntry.start_date,
-            end_date: currentEntry.currently_working ? null : currentEntry.end_date
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save experience');
-        }
-
-        if (currentEntryIndex === experienceEntries.length - 1) {
-          if(registrationData){
-            registrationData.reg_step = 6;
-            Cookies.set('registrationData', JSON.stringify(registrationData), {
-              expires: 0.0208, // 30 minutes
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'Strict'
-            });
-          }
-          router.push('/register/candidate/documents-upload');
-        } else {
-          setCurrentEntryIndex(currentEntryIndex + 1);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        setErrors({ ...errors, submit: error.message });
-      } finally {
-        setIsLoading(false);
+        setErrors({ ...errors, submit: 'Failed to save experience' });
       }
+    } catch (error) {
+      console.error('Error:', error);
+      if (handleTokenExpiration(error, router)) {
+        return;
+      }
+      setErrors({ ...errors, submit: 'Failed to save experience' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -246,6 +201,12 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           
           <p className={`text-center mb-4 ${styles.loginPrompt}`}>
             Please fill the following Experience details to create your account
+          </p>
+
+          <p className={`text-center mb-4 ${styles.errorMessage}`}>
+            {errors.submit && (
+             <> <span className={styles.errorIcon}><FaExclamationCircle /></span> {errors.submit}</>
+            )}
           </p>
 
           <form onSubmit={handleSubmit}>

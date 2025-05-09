@@ -133,141 +133,6 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
         setIsPasswordValid(passwordErrors.length === 0);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        // Validate all fields before submission
-        const emailError = validateEmail(formData.email);
-        const otpError = validateOTP(formData.otp);
-        const passwordErrors = validatePassword(formData.password);
-        
-        if (emailError || otpError || passwordErrors.length > 0) {
-            setErrors({
-                email: emailError,
-                otp: otpError,
-                password: passwordErrors.join(', ')
-            });
-            return;
-        }
-
-        if (!isEmailVerified) {
-            setErrors({ ...errors, otp: 'Please verify your email first' });
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: formData.email,
-                    name: `${formData.first_name} ${formData.last_name}`,
-                    password: formData.password,
-                    re_password: formData.password,
-                    phone: "0000000000",
-                    user_type: formData.user_type
-                }),
-            });
-
-            const data = await response.json();
-            
-            if (response.ok) {
-                // data.password = formData.password;
-                // sessionStorage.setItem('registrationData', JSON.stringify(data));
-                
-
-                const loginRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: formData.email, password: formData.password }),
-                });
-                const loginData = await loginRes.json();
-
-                if (loginRes.ok) {
-                    const getUserProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${loginData.access}` },
-                    });
-                    const userProfile = await getUserProfile.json();
-
-
-                    try {
-                      const registrationData = {
-                        email: formData.email,
-                        password: formData.password,
-                        name: `${formData.first_name} ${formData.last_name}`,
-                        user_type: formData.user_type,
-                        reg_step: userProfile.registration_step,
-                        reg_user_id: userProfile.id,
-                        reg_completed_steps: userProfile.completed_steps
-                      };
-                    
-                      Cookies.set('registrationData', JSON.stringify(registrationData), {
-                        expires: 0.0208, // 30 minutes
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'Strict'
-                      });
-                    } catch (err) {
-                      console.error('Cookie set failed:', err);
-                      setErrors({ ...errors, email: 'Unable to store registration data. Please try again.' });
-                      return;
-                    }
-                    
-                      
-                        if (formData.user_type === 'employer') {
-                          router.push('/register/employer/professional-details');
-                        } else if (formData.user_type === 'consultancy') {
-                          router.push('/register/consultancy/professional-details');
-                        } else {
-                          router.push('/register/candidate/additional-details');
-                        }
-                      
-
-                    // data.reg_step = userProfile.registration_step;
-                    // data.reg_user_id = userProfile.id;
-                    // data.reg_completed_steps = userProfile.completed_steps;
-
-                    // // Store registration data in cookies
-                    // Cookies.set('registrationData', JSON.stringify(data), {
-                    //     maxAge: 30 * 60,
-                    //     secure: process.env.NODE_ENV === 'production',
-                    //     sameSite: 'Strict'
-                    // });
-
-
-                    // // storeRegistrationCredentials({
-                    // //     reg_email: formData.email, 
-                    // //     reg_password: formData.password, 
-                    // //     reg_user_type: formData.user_type, 
-                    // //     reg_access_token: loginData.access, 
-                    // //     reg_step: userProfile.registration_step, 
-                    // //     reg_user_id: userProfile.id, 
-                    // //     reg_completed_steps: userProfile.completed_steps
-                    // // });
-                    
-                    
-                }
-            } else {
-                // Handle registration errors
-                if (data.email) {
-                    setErrors({ ...errors, email: data.email[0] });
-
-                } else if (data.password) {
-                    setErrors({ ...errors, password: data.password[0] });
-                } else {
-                    setErrors({ ...errors, email: 'Registration failed. Please try again.' });
-                }
-            }
-        } catch (error) {
-            setErrors({ ...errors, email: 'Failed to register. Please try again.' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleEmailSubmit = async (e) => {
         e.preventDefault();
         const emailError = validateEmail(formData.email);
@@ -348,6 +213,153 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
+    useEffect(() => {
+        if(google_reg_user){
+            // setFormData({ ...formData, email: google_reg_user.email, first_name: google_reg_user.given_name, last_name: google_reg_user.family_name });
+            handleEmailChange({ target: { value: google_reg_user.email } });
+        }
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        // Validate all fields before submission
+        const emailError = validateEmail(formData.email);
+        const otpError = validateOTP(formData.otp);
+        const passwordErrors = validatePassword(formData.password);
+        
+        if (emailError || otpError || passwordErrors.length > 0) {
+            setErrors({
+                email: emailError,
+                otp: otpError,
+                password: passwordErrors.join(', ')
+            });
+            return;
+        }
+
+        if (!isEmailVerified) {
+            setErrors({ ...errors, otp: 'Please verify your email first' });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            if(google_reg_user && formData.first_name === '' && formData.last_name === ''){
+                formData.first_name = google_reg_user.given_name;
+                formData.last_name = google_reg_user.family_name;
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    name: `${formData.first_name} ${formData.last_name}`,
+                    password: formData.password,
+                    re_password: formData.password,
+                    phone: "0000000000",
+                    user_type: formData.user_type
+                }),
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                // data.password = formData.password;
+                // sessionStorage.setItem('registrationData', JSON.stringify(data));
+                
+
+                const loginRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, password: formData.password }),
+                });
+                const loginData = await loginRes.json();
+
+                if (loginRes.ok) {
+                    const getUserProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${loginData.access}` },
+                    });
+                    const userProfile = await getUserProfile.json();
+
+
+                    try {
+                      const registrationData = {
+                        email: formData.email,
+                        access: loginData.access,
+                        name: `${formData.first_name} ${formData.last_name}`,
+                        user_type: formData.user_type,
+                        reg_step: userProfile.registration_step,
+                        reg_user_id: userProfile.id,
+                        reg_completed_steps: userProfile.completed_steps
+                      };
+                    
+                      Cookies.set('registrationData', JSON.stringify(registrationData), {
+                        expires: 0.0208, // 30 minutes
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'Strict'
+                      });
+                    } catch (err) {
+                      console.error('Cookie set failed:', err);
+                      setErrors({ ...errors, email: 'Unable to store registration data. Please try again.' });
+                      return;
+                    }
+                    
+                      
+                        if (formData.user_type === 'employer') {
+                          router.push('/register/employer/professional-details');
+                        } else if (formData.user_type === 'consultancy') {
+                          router.push('/register/consultancy/professional-details');
+                        } else {
+                          router.push('/register/candidate/additional-details');
+                        }
+                      
+
+                    // data.reg_step = userProfile.registration_step;
+                    // data.reg_user_id = userProfile.id;
+                    // data.reg_completed_steps = userProfile.completed_steps;
+
+                    // // Store registration data in cookies
+                    // Cookies.set('registrationData', JSON.stringify(data), {
+                    //     maxAge: 30 * 60,
+                    //     secure: process.env.NODE_ENV === 'production',
+                    //     sameSite: 'Strict'
+                    // });
+
+
+                    // // storeRegistrationCredentials({
+                    // //     reg_email: formData.email, 
+                    // //     reg_password: formData.password, 
+                    // //     reg_user_type: formData.user_type, 
+                    // //     reg_access_token: loginData.access, 
+                    // //     reg_step: userProfile.registration_step, 
+                    // //     reg_user_id: userProfile.id, 
+                    // //     reg_completed_steps: userProfile.completed_steps
+                    // // });
+                    
+                    
+                }
+            } else {
+                // Handle registration errors
+                if (data.email) {
+                    setErrors({ ...errors, email: data.email[0] });
+
+                } else if (data.password) {
+                    setErrors({ ...errors, password: data.password[0] });
+                } else {
+                    setErrors({ ...errors, email: 'Registration failed. Please try again.' });
+                }
+            }
+        } catch (error) {
+            setErrors({ ...errors, email: 'Failed to register. Please try again.' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
   return (
       <div className={styles.signupContainer}>
         <div className={styles.signupCard}>
@@ -379,6 +391,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                       placeholder="First Name" 
                     //   value={formData.first_name}
                       defaultValue={google_reg_user ? google_reg_user.given_name : ''}
+
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                       required
                     />

@@ -11,14 +11,14 @@ export function middleware(request) {
     const registrationData = cookieValue ? JSON.parse(cookieValue) : null;
 
     const reg_email = registrationData?.email;
-    const reg_password = registrationData?.password;
+    const reg_access = registrationData?.access;
     const reg_userType = registrationData?.user_type;
     const reg_step = parseInt(registrationData?.reg_step || '1');
     const reg_completed = registrationData?.reg_completed_steps;
     const reg_application_status = registrationData?.reg_application_status;
 
     console.log('reg_email', reg_email);
-    console.log('reg_password', reg_password);
+    console.log('reg_access', reg_access);
     console.log('reg_userType', reg_userType);
     console.log('reg_step', reg_step);
     console.log('reg_completed', reg_completed);
@@ -34,7 +34,7 @@ export function middleware(request) {
       return response;
     }
 
-    if (!reg_email || !reg_password || !reg_userType) {
+    if (!reg_email || !reg_access || !reg_userType) {
       const allowedFirstSteps = [
         '/register',
         '/register/employer',

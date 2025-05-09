@@ -11,6 +11,7 @@ import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
 import IdentifyUser from '@/components/register/IdentifyUser';
 import Cookies from 'js-cookie';
+import { handleTokenExpiration } from '@/utils/authUtils';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const router = useRouter();
@@ -110,24 +111,6 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     if (validateForm()) {
       setIsLoading(true);
       try {
-        // First authenticate to get JWT token
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: registrationData.email,
-            password: registrationData.password
-          })
-        });
-
-        if (!loginResponse.ok) {
-          throw new Error('Authentication failed');
-        }
-
-        const { access } = await loginResponse.json();
-
         const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/api/${registrationData.user_type}/profile/`
 
         var profileResponse;
@@ -136,7 +119,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${access}`
+              'Authorization': `Bearer ${registrationData.access}`
             },
             body: JSON.stringify({
               company_name: formData.company_name,
@@ -151,7 +134,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${access}`
+              'Authorization': `Bearer ${registrationData.access}`
             },
             body: JSON.stringify({
               consultancy_name: formData.company_name,
@@ -166,7 +149,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${access}`
+              'Authorization': `Bearer ${registrationData.access}`
             },
             body: JSON.stringify({
               gender: formData.gender,
@@ -181,6 +164,9 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         const data = await profileResponse.json();
 
         if (!profileResponse.ok) {
+          if (handleTokenExpiration(data, router)) {
+            return;
+          }
           console.log(data.website_url);
           setErrors({ ...errors, website_url: data.website_url || data.portfolio_url});
           throw new Error('Failed to update profile');
@@ -209,7 +195,10 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         } 
       } catch (error) {
         console.error('Error:', error);
-        // setErrors({ ...errors, serverError: error.message });
+        if (handleTokenExpiration(error, router)) {
+          return;
+        }
+        setErrors({ ...errors, serverError: error.message });
       } finally {
         setIsLoading(false);
       }
