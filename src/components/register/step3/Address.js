@@ -138,7 +138,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
           <h1 className={`card-title ${styles.title}`}>
             Creating Your <span className={styles.userType}>
-              {registrationData.user_type}
+              {registrationData.user_type ? registrationData.user_type : ''}
             </span> Account
           </h1>
 
