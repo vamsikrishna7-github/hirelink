@@ -1,5 +1,5 @@
 import React from 'react'
-import ProfessionalDetails from '@/components/register/step2/ProfessionalDetails'
+import ProfessionalDetails from '../../../../components/register/step2/professionalDetails'
 
 export default function ProfessionalDetailsPage() {
   return (
