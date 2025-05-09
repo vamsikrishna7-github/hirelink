@@ -8,6 +8,7 @@ import styles from './Login.module.css';
 import Image from 'next/image';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
+import Cookies from 'js-cookie';
 
 
 
@@ -49,9 +50,6 @@ export default function Login() {
       const authData = await authResponse.json();
       console.log('Login successful, received tokens');
 
-      document.cookie = `access_token=${authData.access}; path=/; max-age=3600`;
-      document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`;
-
       const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
         method: "GET",
         headers: {
@@ -70,8 +68,36 @@ export default function Login() {
       const profileData = await profileResponse.json();
       console.log('Profile fetched successfully:', profileData);
 
-      document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`;
-      router.push(`/dashboard/${profileData.user_type}`);
+      if((profileData.completed_steps === 'false') || !profileData.completed_steps){
+        try {
+          const registrationData = {
+            email: email,
+            password: password,
+            user_type: profileData.user_type,
+            reg_step: profileData.registration_step,
+            reg_user_id: profileData.id,
+            reg_completed_steps: profileData.completed_steps
+          };
+        
+          Cookies.set('registrationData', JSON.stringify(registrationData), {
+            expires: 0.0208, // 30 minutes
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+          });
+          console.log('cookie stored');
+
+          router.push(`/register/`);
+        } catch (err) {
+          console.error('Cookie set failed:', err);
+          setError('Unable to store registration data. Please try again.' );
+          return;
+        }
+      }else{
+        document.cookie = `access_token=${authData.access}; path=/; max-age=3600`;
+        document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`;
+        document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`;
+        router.push(`/dashboard/${profileData.user_type}`);
+      }
     } catch (err) {
       console.error("Login error:", err);
       if (err.message.includes('Failed to fetch')) {

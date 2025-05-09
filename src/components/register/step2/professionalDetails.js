@@ -10,9 +10,11 @@ import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
 import IdentifyUser from '@/components/register/IdentifyUser';
+import Cookies from 'js-cookie';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const router = useRouter();
+  const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('IN');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,18 +36,24 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     portfolio_url: '',
   });
 
-  const [registrationData, setRegistrationData] = useState('');
+  // const [registrationData, setRegistrationData] = useState('');
+  // useEffect(() => {
+  //   const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+  //   if (registrationData) {
+  //     setRegistrationData(registrationData);
+  //     console.log("registrationData before removing from sessionStorage: ",registrationData);
+  //   }
+  // }, []);
+
   useEffect(() => {
-    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
     if (registrationData) {
-      setRegistrationData(registrationData);
-      console.log("registrationData before removing from sessionStorage: ",registrationData);
+      console.log("registrationData professionalDetails/ cookies: ",registrationData);
     }
   }, []);
 
 
   const validateForm = () => {
-    if (registrationData.user_type === 'candidate') {
+    if ( registrationData && registrationData.user_type === 'candidate') {
       // Required fields validation for candidates
       if (!formData.gender) return false;
       if (!formData.phone) return false;
@@ -163,6 +171,19 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           throw new Error('Failed to update profile');
         }
 
+        if(registrationData){
+          try{
+            registrationData.reg_step = 4;
+            Cookies.set('registrationData', JSON.stringify(registrationData), {
+              expires: 0.0208, // 30 minutes
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'Strict'
+            });
+          }catch(err){
+            console.error('Error in setting registrationData in cookies:', err);
+          }
+        }
+
         // Clear the registration data from session storage
         // sessionStorage.removeItem('registrationData');
         if(registrationData.user_type !== 'candidate'){
@@ -212,7 +233,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           <div className={`${styles.pageIndicator} mb-4`}>
             <span className={styles.pageIndicatorText}>
               <span className={styles.currentPage}>Step 2</span>
-              <span className={styles.totalPages}>/4</span>
+              <span className={styles.totalPages}>/{registrationData && registrationData.user_type === "candidate" ? 5 : 4}</span>
             </span>
           </div>
 
@@ -226,7 +247,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
 
           <form onSubmit={handleSubmit}>
-            {registrationData.user_type !== 'candidate' && (
+            {registrationData && registrationData.user_type !== 'candidate' && (
               <div className="mb-3">
                 <label className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY NAME' : consultancy ? 'CONSULTANCY NAME' : ''}</label>
                 <div className={`input-group ${styles.otpGroup}`}>
@@ -246,7 +267,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               </div>
             )}
 
-            {registrationData.user_type === 'candidate' && (
+            {registrationData && registrationData.user_type === 'candidate' && (
               <div className="mb-3">
                 <label className={`form-label ${styles.inputLabel}`}>GENDER</label>
                 <div className={`input-group ${styles.otpGroup}`}>
@@ -345,7 +366,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               )}
             </div>
 
-            {registrationData.user_type !== 'candidate' && (
+            {registrationData && registrationData.user_type !== 'candidate' && (
               <div className="row mb-3">
                 <div className="col-md-6 mb-3 mb-md-0">
                   <label htmlFor="firstName" className={`form-label ${styles.inputLabel}`}>{employer ? 'COMPANY SIZE' : consultancy ? 'CONSULTANCY SIZE' : ''}</label>
@@ -386,7 +407,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               </div>
             )} 
 
-            {registrationData.user_type === 'candidate' && (
+            {registrationData && registrationData.user_type === 'candidate' && (
               <div className="row mb-3">
               {/* Current City Selection (Dropdown) */}
               <div className="col-md-6 mb-3 mb-md-0">
@@ -430,7 +451,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
             </div>
             )}
 
-          {registrationData.user_type !== 'candidate' && (
+          {registrationData && registrationData.user_type !== 'candidate' && (
             <div className="mb-4">
               <label htmlFor="website_url" className={`form-label ${styles.inputLabel}`}>Website URL(optional)</label>
               <div className={`${styles.iconInputWrapper}`}>
@@ -453,7 +474,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
             </div>
           )}
 
-          {registrationData.user_type === 'candidate' && (
+          {registrationData && registrationData.user_type === 'candidate' && (
             <div className="mb-4">
               <label htmlFor="portfolio_url" className={`form-label ${styles.inputLabel}`}>
                 Portfolio URL (optional)

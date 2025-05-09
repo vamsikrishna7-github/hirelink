@@ -4,22 +4,27 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaBuilding, FaHandshake, FaUserTie } from 'react-icons/fa';
 import styles from './page.module.css';
+import Cookies from 'js-cookie';
+
 
 export default function Register() {
+  const google_reg_user = JSON.parse(Cookies.get('google_reg_user') || 'null');
   const [selectedType, setSelectedType] = useState('');
-  const [registrationData, setRegistrationData] = useState(null);
-  const [isRegistrationData, setIsRegistrationData] = useState(false);
+  // const [registrationData, setRegistrationData] = useState(null);
+  // const [isRegistrationData, setIsRegistrationData] = useState(false);
+  
+  if(google_reg_user){console.log("google_reg_user: ",google_reg_user.email,google_reg_user);}
 
-  useEffect(() => {
-    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
-    if (registrationData) {
-      setRegistrationData(registrationData);
-      setIsRegistrationData(true);
-      console.log("registrationData before removing from sessionStorage: ",registrationData);
-      // sessionStorage.removeItem('registrationData'); // Clean up
-      // console.log("registrationData after removing from sessionStorage: ",registrationData);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+  //   if (registrationData) {
+  //     setRegistrationData(registrationData);
+  //     setIsRegistrationData(true);
+  //     console.log("registrationData before removing from sessionStorage: ",registrationData);
+  //     // sessionStorage.removeItem('registrationData'); // Clean up
+  //     // console.log("registrationData after removing from sessionStorage: ",registrationData);
+  //   }
+  // }, []);
 
   return (
     <div className={`${styles.wrapper} register-page py-3 py-md-5`}>
@@ -28,11 +33,11 @@ export default function Register() {
           <div className="col-12 col-lg-10 col-xl-8">
             <div className="text-center mb-4 mb-md-5 px-2">
               <h1 className="display-5 fw-bold mb-2">Create Your Account</h1>
-              {isRegistrationData ? 
+              {google_reg_user ? 
               <h1 className={`${styles.responsiveaccountmessage}`}>
                 No account found for{" "}
                 <span className={`${styles.responsiveemail}`}>
-                  {registrationData.email}
+                  {google_reg_user.email}
                 </span>
               </h1> :
               <></>

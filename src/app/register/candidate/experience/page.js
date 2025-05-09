@@ -5,9 +5,10 @@ import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, F
 import {FiEye, FiEyeOff, FiLink, FiUsers} from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
-  const [registrationData, setRegistrationData] = useState('');
+  const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [experienceEntries, setExperienceEntries] = useState([]);
   const [currentEntryIndex, setCurrentEntryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -15,10 +16,13 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
   const router = useRouter();
 
   useEffect(() => {
-    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
-    if (registrationData) {
-      setRegistrationData(registrationData);
-      fetchExperiences();
+    // const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+    // if (registrationData) {
+    //   setRegistrationData(registrationData);
+    //   fetchExperiences();
+    // }
+    if(registrationData){
+      console.log("registrationData experience/ cookies: ", registrationData);
     }
   }, []);
 
@@ -194,6 +198,14 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         }
 
         if (currentEntryIndex === experienceEntries.length - 1) {
+          if(registrationData){
+            registrationData.reg_step = 6;
+            Cookies.set('registrationData', JSON.stringify(registrationData), {
+              expires: 0.0208, // 30 minutes
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'Strict'
+            });
+          }
           router.push('/register/candidate/documents-upload');
         } else {
           setCurrentEntryIndex(currentEntryIndex + 1);
@@ -206,6 +218,18 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
       }
     }
   };
+
+  function handleSkip(){
+    if(registrationData){
+      registrationData.reg_step = 6;
+      Cookies.set('registrationData', JSON.stringify(registrationData), {
+        expires: 0.0208, // 30 minutes
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict'
+      });
+    }
+    router.push('/register/candidate/documents-upload');
+  }
 
   return (
     <div className={styles.signupContainer}>
@@ -386,12 +410,13 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
             <div className="d-flex justify-content-between align-items-center mt-4 row">
               <div className="d-flex gap-2 col mt-2">
-                <Link 
-                  href="/register/candidate/documents-upload" 
+                <button 
+                  type="button" 
                   className={`btn ${styles.skipButton}`}
+                  onClick={handleSkip}
                 >
                   Skip
-                </Link>
+                </button>
                 <button 
                   type="button" 
                   className={`btn ${styles.addButton}`}

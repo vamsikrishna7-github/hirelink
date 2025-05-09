@@ -9,9 +9,10 @@ import Link from 'next/link';
 import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
-  const [registrationData, setRegistrationData] = useState('');
+  const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [educationEntries, setEducationEntries] = useState([]);
   const [currentEntryIndex, setCurrentEntryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,9 +20,13 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
   const router = useRouter();
 
   useEffect(() => {
-    const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
-    if (registrationData) {
-      setRegistrationData(registrationData);
+    // const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
+    // if (registrationData) {
+    //   setRegistrationData(registrationData);
+    //   fetchEducations();
+    // }
+    if(registrationData){
+      console.log("registrationData education/ cookies: ", registrationData);
       fetchEducations();
     }
   }, []);
@@ -195,6 +200,14 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         }
 
         if (currentEntryIndex === educationEntries.length - 1) {
+          if(registrationData){
+            registrationData.reg_step = 5;
+            Cookies.set('registrationData', JSON.stringify(registrationData), {
+              expires: 0.0208, // 30 minutes
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'Strict'
+            });
+          }
           router.push('/register/candidate/experience');
         } else {
           setCurrentEntryIndex(currentEntryIndex + 1);
@@ -208,6 +221,18 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     }
   };
 
+  function handleSkip(){
+    if(registrationData){
+      registrationData.reg_step = 5;
+      Cookies.set('registrationData', JSON.stringify(registrationData), {
+        expires: 0.0208, // 30 minutes
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict'
+      });
+    }
+    router.push('/register/candidate/experience');
+  }
+
   return (
     <div className={styles.signupContainer}>
       <div className={styles.signupCard}>
@@ -215,7 +240,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           <div className={`${styles.pageIndicator} mb-4`}>
             <span className={styles.pageIndicatorText}>
               <span className={styles.currentPage}>Step 3</span>
-              <span className={styles.totalPages}>/4</span>
+              <span className={styles.totalPages}>/5</span>
             </span>
           </div>
           
@@ -372,12 +397,13 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
             <div className="d-flex justify-content-between align-items-center mt-4 row">
               <div className="d-flex gap-2 col mt-2">
-                <Link 
-                  href="/register/candidate/experience" 
+                <button 
+                  type="button" 
                   className={`btn ${styles.skipButton}`}
+                  onClick={handleSkip}
                 >
                   Skip
-                </Link>
+                </button>
                 <button 
                   type="button" 
                   className={`btn ${styles.addButton}`}

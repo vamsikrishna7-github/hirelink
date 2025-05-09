@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Documents-upload.module.css';
 import { useRouter } from 'next/navigation';
 import { FaFileUpload, FaSpinner } from 'react-icons/fa';
+import Cookies from 'js-cookie';
 
 const DocumentsUpload = () => {
   const router = useRouter();
@@ -11,11 +12,12 @@ const DocumentsUpload = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const regData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
 
   useEffect(() => {
-    const regData = JSON.parse(sessionStorage.getItem('registrationData'));
     if (regData && regData.email) {
       setEmail(regData.email);
+      console.log("registrationData documentsUpload/ cookies: ", regData);
     }
   }, []);
 
@@ -94,6 +96,14 @@ const DocumentsUpload = () => {
         throw new Error('Failed to upload resume');
       }
 
+      if(regData){
+        regData.reg_step = 7;
+        Cookies.set('registrationData', JSON.stringify(regData), {
+          expires: 0.0208, // 30 minutes
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict'
+        });
+      }
       router.push('/register/candidate/application-status');
     } catch (error) {
       console.error('Upload error:', error);

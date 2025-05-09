@@ -5,7 +5,7 @@ import Image from 'next/image';
 import styles from '@/app/login/Login.module.css';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
+import Cookies from 'js-cookie';
 
 export default function GoogleLoginButton() {
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,12 @@ export default function GoogleLoginButton() {
         }else{
           setError(data.error);
           if(data.error === "User not found"){
-            sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
+            Cookies.set('google_reg_user', JSON.stringify(data), { 
+              expires: 1,
+              secure: true,
+              sameSite: 'Strict'
+            });
+            // sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
             router.push("/register");
           }
           // console.log("google login error: ",data);

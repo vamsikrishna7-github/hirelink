@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Documents-upload.module.css';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 const documentFields = [
   { 
@@ -36,6 +37,7 @@ const documentFields = [
 
 const DocumentsUpload = () => {
   const router = useRouter();
+  const regData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [files, setFiles] = useState({});
   const [errors, setErrors] = useState({});
   const [email, setEmail] = useState('');
@@ -44,8 +46,8 @@ const DocumentsUpload = () => {
 
   useEffect(() => {
     // Get email from session storage
-    const regData = JSON.parse(sessionStorage.getItem('registrationData'));
-    console.log(regData);
+    // const regData = JSON.parse(sessionStorage.getItem('registrationData'));
+    console.log("regData documentsUpload/ cookies: ", regData);
     if (regData && regData.email) {
       setEmail(regData.email);
     }
@@ -145,7 +147,20 @@ const DocumentsUpload = () => {
         throw new Error('Failed to submit documents');
       }
 
-      router.push('/register/employer/application-status');
+      if(regData){
+        try{
+          regData.reg_step = 6;
+          Cookies.set('registrationData', JSON.stringify(regData), {
+            expires: 0.0208, // 30 minutes
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+          });
+        }catch(err){
+          console.error('Error in setting registrationData in cookies:', err);
+        }
+      }
+
+      router.push(`/register/${regData.user_type}/application-status`);
     } catch (error) {
       console.error('Submission error:', error);
       setErrors(prev => ({ ...prev, submit: 'Failed to submit documents. Please try again.' }));

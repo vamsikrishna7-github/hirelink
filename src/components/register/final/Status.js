@@ -4,15 +4,18 @@ import React, { useState, useEffect, useRef } from 'react'
 import styles from './Status.module.css'
 import { FaCheckCircle, FaTimesCircle, FaEnvelope, FaExclamationCircle, FaClock } from 'react-icons/fa'
 import Link from 'next/link'
+import Cookies from 'js-cookie';
 
 export default function StatusPage() {
   const [status, setStatus] = useState('verifying')
   const [error, setError] = useState(null)
   const pollingInterval = useRef(null)
+  var regData = null;
+
 
   const checkStatus = async () => {
     try {
-      const regData = JSON.parse(sessionStorage.getItem('registrationData'))
+      regData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
       console.log('Registration Data:', regData)
       if (!regData || !regData.email) {
         setStatus('User not found')
@@ -41,16 +44,47 @@ export default function StatusPage() {
 
       // If status is approved or rejected, stop polling
       if (newStatus === 'approved' || newStatus === 'rejected') {
+        if(newStatus === 'approved'){
+        regData.reg_completed_steps = 'true';
+        Cookies.set('registrationData', JSON.stringify(regData), {
+          expires: 0.0208, // 30 minutes
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict'
+        });
+        }
+        
         if (pollingInterval.current) {
           clearInterval(pollingInterval.current)
         }
       }
+      
     } catch (err) {
       console.error('Error fetching status:', err)
       setStatus('error')
       setError(err.message)
     }
   }
+
+
+
+  useEffect(() => {
+
+    if (regData) {
+
+      if (regData.reg_completed_steps === 'true' || regData.reg_step === 6 || regData.reg_step === 7) {
+        const timer = setTimeout(() => {
+          Cookies.remove('registrationData', {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+          });
+          console.log('registrationData cookie removed after 3 minutes');
+        }, 3 * 60 * 1000); // 3 minutes in milliseconds
+
+        return () => clearTimeout(timer); // Cleanup on unmount
+      }
+    }
+  }, []);
+  
 
   useEffect(() => {
     // Initial check
@@ -65,13 +99,15 @@ export default function StatusPage() {
         clearInterval(pollingInterval.current)
       }
     }
-  }, [status]) // Add status as dependency to check for changes
+  }, []) // Add status as dependency to check for changes
 
   const handleRetry = () => {
     setStatus('verifying')
     setError(null)
     checkStatus()
   }
+
+  
 
   return (
     <div className={styles.container}>

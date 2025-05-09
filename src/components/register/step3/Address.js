@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { FaUser, FaBuilding, FaKey, FaPhone, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner, FaBriefcase, FaMapMarkerAlt, FaCity, FaGlobeAmericas, FaMap, FaEnvelope, FaLandmark } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const router = useRouter();
-  const [registrationData, setRegistrationData] = useState('');
+  // const [registrationData, setRegistrationData] = useState('');
+  const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
   const [formData, setFormData] = useState({
     street_address: '',
     locality: '',
@@ -32,10 +34,13 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
   };
 
   useEffect(() => {
-    const regData = JSON.parse(sessionStorage.getItem('registrationData'));
-    if (regData) {
-      setRegistrationData(regData);
-      console.log("registrationData /address sessionStorage: ", regData);
+    // const regData = JSON.parse(sessionStorage.getItem('registrationData'));
+    // if (regData) {
+    //   setRegistrationData(regData);
+    //   console.log("registrationData /address sessionStorage: ", regData);
+    // }
+    if(registrationData){
+      console.log("registrationData /address cookies: ", registrationData);
     }
   }, []);
 
@@ -97,10 +102,18 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
       const data = await profileResponse.json();
       
-      // Clear the registration data from session storage
-      // sessionStorage.removeItem('registrationData');
-      
-      // Redirect to next step or dashboard
+      if(registrationData){
+        try{
+          registrationData.reg_step = 5;
+          Cookies.set('registrationData', JSON.stringify(registrationData), {
+            expires: 0.0208, // 30 minutes
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+          });
+        }catch(err){
+          console.error('Error in setting registrationData in cookies:', err);
+        }
+      }
       router.push(`/register/${registrationData.user_type}/documents-upload`);
 
     } catch (error) {

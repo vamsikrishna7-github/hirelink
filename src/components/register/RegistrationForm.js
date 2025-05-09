@@ -1,14 +1,24 @@
 "use client";
 import styles from './page.module.css';
 import { useState, useEffect } from 'react';
-import { FaUser, FaEnvelope, FaKey, FaShieldAlt, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaKey, FaShieldAlt, FaArrowLeft, FaExclamationCircle, FaCheckCircle, FaSpinner,FaSignInAlt } from 'react-icons/fa';
 import {FiEye, FiEyeOff} from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { storeRegistrationCredentials } from '@/utils/storeRegistrationCookies';
+import Cookies from 'js-cookie';
+
 
 
 export default function SignUpPage({ employer, consultancy, candidate }) {
     const router = useRouter();
+    const google_reg_user = JSON.parse(Cookies.get('google_reg_user') || 'null');
+    useEffect(() => {
+        if (google_reg_user) {
+            console.log("google_reg_user: ", google_reg_user);
+        }
+    }, []);
+    
     const [showPassword, setShowPassword] = useState(false);
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isOtpValid, setIsOtpValid] = useState(false);
@@ -165,19 +175,86 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
             const data = await response.json();
             
             if (response.ok) {
-                data.password = formData.password;
-                sessionStorage.setItem('registrationData', JSON.stringify(data)); // Saveing the data to sessionStorage
-                if (employer) {
-                    router.push('/register/employer/professional-details');
-                  } else if(consultancy) {
-                    router.push('/register/consultancy/professional-details');
-                  }else {
-                    router.push('/register/candidate/additional-details');
-                  }
+                // data.password = formData.password;
+                // sessionStorage.setItem('registrationData', JSON.stringify(data));
+                
+
+                const loginRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, password: formData.password }),
+                });
+                const loginData = await loginRes.json();
+
+                if (loginRes.ok) {
+                    const getUserProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${loginData.access}` },
+                    });
+                    const userProfile = await getUserProfile.json();
+
+
+                    try {
+                      const registrationData = {
+                        email: formData.email,
+                        password: formData.password,
+                        name: `${formData.first_name} ${formData.last_name}`,
+                        user_type: formData.user_type,
+                        reg_step: userProfile.registration_step,
+                        reg_user_id: userProfile.id,
+                        reg_completed_steps: userProfile.completed_steps
+                      };
+                    
+                      Cookies.set('registrationData', JSON.stringify(registrationData), {
+                        expires: 0.0208, // 30 minutes
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'Strict'
+                      });
+                    } catch (err) {
+                      console.error('Cookie set failed:', err);
+                      setErrors({ ...errors, email: 'Unable to store registration data. Please try again.' });
+                      return;
+                    }
+                    
+                      
+                        if (formData.user_type === 'employer') {
+                          router.push('/register/employer/professional-details');
+                        } else if (formData.user_type === 'consultancy') {
+                          router.push('/register/consultancy/professional-details');
+                        } else {
+                          router.push('/register/candidate/additional-details');
+                        }
+                      
+
+                    // data.reg_step = userProfile.registration_step;
+                    // data.reg_user_id = userProfile.id;
+                    // data.reg_completed_steps = userProfile.completed_steps;
+
+                    // // Store registration data in cookies
+                    // Cookies.set('registrationData', JSON.stringify(data), {
+                    //     maxAge: 30 * 60,
+                    //     secure: process.env.NODE_ENV === 'production',
+                    //     sameSite: 'Strict'
+                    // });
+
+
+                    // // storeRegistrationCredentials({
+                    // //     reg_email: formData.email, 
+                    // //     reg_password: formData.password, 
+                    // //     reg_user_type: formData.user_type, 
+                    // //     reg_access_token: loginData.access, 
+                    // //     reg_step: userProfile.registration_step, 
+                    // //     reg_user_id: userProfile.id, 
+                    // //     reg_completed_steps: userProfile.completed_steps
+                    // // });
+                    
+                    
+                }
             } else {
                 // Handle registration errors
                 if (data.email) {
                     setErrors({ ...errors, email: data.email[0] });
+
                 } else if (data.password) {
                     setErrors({ ...errors, password: data.password[0] });
                 } else {
@@ -216,7 +293,11 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                 setIsOtpSent(true);
                 setResendTimer(300); // 5 minutes in seconds
             } else {
-                setErrors({ ...errors, email: data.error || 'Failed to send OTP' });
+                if(data.email === 'user with this email already exists.' ){
+                    setErrors({ ...errors, email: 'User with this email already exists.' });
+                }else{
+                    setErrors({ ...errors, email: data.error || 'Failed to send OTP' });
+                }
             }
         } catch (error) {
             setErrors({ ...errors, email: 'Failed to send OTP. Please try again.' });
@@ -250,6 +331,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
             if (response.ok) {
                 setStatus({ ...status, otp: 'Email verified successfully' });
                 setIsEmailVerified(true);
+                setResendTimer(0);
             } else {
                 setErrors({ ...errors, otp: data.message || 'Invalid OTP' });
             }
@@ -274,7 +356,7 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
             <div className={`${styles.pageIndicator} mb-4`}>
               <span className={styles.pageIndicatorText}>
                 <span className={styles.currentPage}>Step 1</span>
-                <span className={styles.totalPages}>/4</span>
+                <span className={styles.totalPages}>/{candidate ? 5 : 4}</span>
               </span>
             </div>
             
@@ -295,7 +377,8 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                       className={`form-control ${styles.formControl}`} 
                       id="firstName" 
                       placeholder="First Name" 
-                      value={formData.first_name}
+                    //   value={formData.first_name}
+                      defaultValue={google_reg_user ? google_reg_user.given_name : ''}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                       required
                     />
@@ -310,7 +393,8 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                       className={`form-control ${styles.formControl}`} 
                       id="lastName" 
                       placeholder="Last Name" 
-                      value={formData.last_name}
+                    //   value={formData.last_name}
+                      defaultValue={google_reg_user ? google_reg_user.family_name : ''}
                       onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                       required
                     />
@@ -327,7 +411,8 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                         type="email" 
                         className={`form-control rounded-end-0 ${styles.formControl}`}
                         placeholder="Enter mail address" 
-                        value={formData.email}
+                        // value={formData.email}
+                        defaultValue={google_reg_user ? google_reg_user.email : ''}
                         onChange={handleEmailChange}
                         disabled={isEmailVerified || isOtpSent || isLoading || resendTimer > 0}
                         required
@@ -349,6 +434,9 @@ export default function SignUpPage({ employer, consultancy, candidate }) {
                     <div className={styles.errorMessage}>
                         <FaExclamationCircle className={styles.errorIcon} />
                         {errors.email}
+                        {(errors.email === "user with this email already exists.") || (errors.email === "Email already exists")? (
+                        <Link href="/login" className='text-success'><FaSignInAlt className='me-1'/>login</Link>
+                        ) : ''}
                     </div>
                 )}
                 {status.email && (
