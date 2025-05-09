@@ -15,6 +15,7 @@ export function middleware(request) {
     const reg_userType = registrationData?.user_type;
     const reg_step = parseInt(registrationData?.reg_step || '1');
     const reg_completed = registrationData?.reg_completed_steps;
+    const reg_application_status = registrationData?.reg_application_status;
 
     console.log('reg_email', reg_email);
     console.log('reg_password', reg_password);
@@ -22,7 +23,7 @@ export function middleware(request) {
     console.log('reg_step', reg_step);
     console.log('reg_completed', reg_completed);
 
-    if (reg_completed === 'true'|| reg_completed) {
+    if (reg_completed === 'true'|| reg_application_status === 'approved') {
       const response = NextResponse.redirect(new URL('/login', request.url));
       const reg_cookiesToClear = [
         'registrationData',

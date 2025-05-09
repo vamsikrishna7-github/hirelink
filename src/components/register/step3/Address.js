@@ -92,7 +92,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
           'Authorization': `Bearer ${access}`
         },
         body: JSON.stringify({
-          company_address: fullAddress
+          [registrationData.user_type === 'employer' ? 'company_address' : 'office_address']: fullAddress
         })
       });
 

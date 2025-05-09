@@ -131,7 +131,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
         const apiURL = `${process.env.NEXT_PUBLIC_API_URL}/api/${registrationData.user_type}/profile/`
 
         var profileResponse;
-        if(registrationData.user_type !== 'candidate'){
+        if(registrationData.user_type === 'employer'){
           profileResponse = await fetch(apiURL, {
             method: 'PATCH',
             headers: {
@@ -144,6 +144,21 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               company_size: formData.companySize,
               designation: formData.designation,
               website_url: formData.website_url
+            })
+          });
+        }else if(registrationData.user_type === 'consultancy'){
+          profileResponse = await fetch(apiURL, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${access}`
+            },
+            body: JSON.stringify({
+              consultancy_name: formData.company_name,
+              phone_number: formData.phone,
+              consultancy_size: formData.companySize,
+              specialization: formData.designation,
+              website: formData.website_url
             })
           });
         }else {

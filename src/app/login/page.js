@@ -68,7 +68,18 @@ export default function Login() {
       const profileData = await profileResponse.json();
       console.log('Profile fetched successfully:', profileData);
 
-      if((profileData.completed_steps === 'false') || !profileData.completed_steps){
+      const userProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${authData.access}`,
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      });
+      const userProfileData = await userProfile.json();
+      console.log('userProfileData', userProfileData.profile.application_status);
+
+      if((!profileData.completed_steps) || (userProfileData.profile.application_status !== "approved")){
         try {
           const registrationData = {
             email: email,
@@ -76,7 +87,8 @@ export default function Login() {
             user_type: profileData.user_type,
             reg_step: profileData.registration_step,
             reg_user_id: profileData.id,
-            reg_completed_steps: profileData.completed_steps
+            reg_completed_steps: profileData.completed_steps,
+            reg_application_status: userProfileData.profile.application_status
           };
         
           Cookies.set('registrationData', JSON.stringify(registrationData), {
