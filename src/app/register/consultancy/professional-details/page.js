@@ -6,3 +6,4 @@ export default function ProfessionalDetailsPage(data) {
     <ProfessionalDetails employer={false} consultancy={true} candidate={false} email={data.email}/>
   )
 }
+
