@@ -84,9 +84,37 @@ export default function Login() {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict'
           });
-          console.log('cookie stored');
-
-          router.push(`/register/`);
+          
+          
+    const reg_stepMap = {
+      employer: [
+        '/register',
+        '/register/employer',
+        '/register/employer/professional-details',
+        '/register/employer/address',
+        '/register/employer/documents-upload',
+        '/register/employer/application-status',
+      ],
+      consultancy: [
+        '/register',
+        '/register/consultancy',
+        '/register/consultancy/professional-details',
+        '/register/consultancy/address',
+        '/register/consultancy/documents-upload',
+        '/register/consultancy/application-status',
+      ],
+      candidate: [
+        '/register',
+        '/register/candidate',
+        '/register/candidate/additional-details',
+        '/register/candidate/education',
+        '/register/candidate/experience',
+        '/register/candidate/documents-upload',
+        '/register/candidate/application-status',
+      ],
+    };
+          console.log(`${reg_stepMap[profileData.user_type][profileData.registration_step-1]}`);
+          router.push(`${reg_stepMap[profileData.user_type][profileData.registration_step-1]}`);
         } catch (err) {
           console.error('Cookie set failed:', err);
           setError('Unable to store registration data. Please try again.' );
