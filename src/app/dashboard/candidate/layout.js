@@ -15,6 +15,12 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 export default function DashboardLayout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    user: {},
+    profile: {},
+    education: [],
+    experience: []
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -25,6 +31,35 @@ export default function DashboardLayout({ children }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/get/profile/', {
+          headers: {
+            'Authorization': `Bearer ${getCookie('access_token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+
+        const data = await response.json();
+        setProfileData(data);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  };
 
   const stats = [
     { 
@@ -66,29 +101,7 @@ export default function DashboardLayout({ children }) {
     }
   ];
 
-  const recent = [
-    { 
-      company: "Microsoft",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png",
-      position: "UI/UX Designer",
-      status: "Pending", 
-      date: "2024-03-15" 
-    },
-    { 
-      company: "Canon",
-      logo: "https://1000logos.net/wp-content/uploads/2016/10/Canon-logo.jpg",
-      position: "UI/UX Designer",
-      status: "Rejected", 
-      date: "2024-03-14" 
-    },
-    { 
-      company: "Razer",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0CL18TsZPEpYmfVwb1_SR7ePvkCDmqrXOQ&s",
-      position: "UI/UX Designer",
-      status: "Scheduled", 
-      date: "2024-03-13" 
-    }
-  ];
+
 
   const pathname = usePathname();
   
@@ -184,6 +197,7 @@ export default function DashboardLayout({ children }) {
               setShowSidebar(false);
               document.body.style.overflow = 'auto';
             }}
+            profileData={profileData}
           />
         )}
       </AnimatePresence>

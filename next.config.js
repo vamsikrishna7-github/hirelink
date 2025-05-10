@@ -13,6 +13,13 @@ const nextConfig = {
       'w7.pngwing.com',
       'encrypted-tbn0.gstatic.com',
       'img.icons8.com',
+      'encrypted-tbn1.gstatic.com',
+      'logo.clearbit.com', 
+      'res.cloudinary.com',
+      'google.com',
+      'icons.duckduckgo.com',
+      'www.google.com',
+      'res.cloudinary.com',
     ],
   },
   env: {

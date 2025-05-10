@@ -12,7 +12,8 @@ export default function DashboardSidebar({
   showSidebar, 
   menuItems, 
   footerItems,
-  onCloseSidebar
+  onCloseSidebar,
+  profileData
 }) {
   const sidebarVariants = {
     hidden: { x: -280, opacity: 0 },
@@ -79,15 +80,15 @@ const router = useRouter();
         <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
-            src="/My_profile.webp" 
+            src={profileData?.profile?.profile_image || "/Dashboards/Default_DP.jpg"} 
             alt="Profile" 
             className={styles.avatar}
             width={45}
             height={45}
           />
           <div>
-            <p className="mb-0">Yeddala Sukumar</p>
-            <small>yeddala.sukumar@gmail.com</small>
+            <p className="mb-0">{profileData?.user?.name || 'User'}</p>
+            <small>{profileData?.user?.email || 'user@email.com'}</small>
           </div>
         </div>
         </Link>
