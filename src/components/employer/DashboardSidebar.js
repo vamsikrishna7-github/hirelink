@@ -12,7 +12,8 @@ export default function DashboardSidebar({
   showSidebar, 
   menuItems, 
   footerItems,
-  onCloseSidebar
+  onCloseSidebar,
+  profileData
 }) {
   const sidebarVariants = {
     hidden: { x: -280, opacity: 0 },
@@ -25,6 +26,7 @@ const router = useRouter();
       onCloseSidebar();
     }
   };
+  console.log("profileData 1: ",profileData)
 
   return (
     <motion.div
@@ -79,15 +81,15 @@ const router = useRouter();
         <Link href="/dashboard/employer/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
-            src="https://img.icons8.com/color/480/google-logo.png" 
+            src={profileData.profile.profile_image || `https://robohash.org/${profileData.user.name}.png?set=set3`} 
             alt="Profile" 
             className={`${styles.avatar} bg-white`}
             width={45}
             height={45}
           />
           <div>
-            <p className="mb-0">Yeddala Sukumar</p>
-            <small>yeddala.sukumar@gmail.com</small>
+            <p className="mb-0">{profileData.user.name}</p>
+            <small>{profileData.user.email}</small>
           </div>
         </div>
         </Link>

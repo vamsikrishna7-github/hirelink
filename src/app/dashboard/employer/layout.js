@@ -9,11 +9,18 @@ import TopNavbar from "@/components/employer/TopNavbar";
 import DashboardSidebar from "@/components/employer/DashboardSidebar";
 import { usePathname } from "next/navigation";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
+import Cookies from 'js-cookie';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function DashboardLayout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    user: {},
+    profile: {},
+    education: [],
+    experience: []
+  });
 
   useEffect(() => {
     // for css import
@@ -56,6 +63,29 @@ export default function DashboardLayout({ children }) {
     }
   };
 
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+
+        const data = await response.json();
+        setProfileData(data);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
   return (
     <div className={styles.wrapper}>
       <TopNavbar 
@@ -71,6 +101,7 @@ export default function DashboardLayout({ children }) {
             showSidebar={showSidebar}
             menuItems={menuItems}
             footerItems={footerItems}
+            profileData={profileData}
             onCloseSidebar={() => {
               setShowSidebar(false);
               document.body.style.overflow = 'auto';
