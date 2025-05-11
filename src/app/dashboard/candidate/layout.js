@@ -8,7 +8,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import TopNavbar from "@/components/TopNavbar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { usePathname } from "next/navigation";
-
+import Cookies from 'js-cookie';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }) {
       try {
         const response = await fetch('http://127.0.0.1:8000/api/get/profile/', {
           headers: {
-            'Authorization': `Bearer ${getCookie('access_token')}`
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
         
@@ -54,12 +54,6 @@ export default function DashboardLayout({ children }) {
 
     fetchProfileData();
   }, []);
-
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  };
 
   const stats = [
     { 

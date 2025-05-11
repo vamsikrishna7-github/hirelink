@@ -14,18 +14,21 @@ import { handleTokenExpiration } from '@/utils/authUtils';
 
 export default function SignUpPage({ employer, consultancy, candidate, useremail }) {
   const registrationData = Cookies.get('registrationData') ? JSON.parse(Cookies.get('registrationData')) : null;
-  const [educationEntries, setEducationEntries] = useState([]);
+  const [educationEntries, setEducationEntries] = useState([{
+    education_type: '',
+    school_name: '',
+    degree: '',
+    field_of_study: '',
+    start_date: '',
+    end_date: '',
+    grade: '',
+  }]);
   const [currentEntryIndex, setCurrentEntryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const router = useRouter();
 
   useEffect(() => {
-    // const registrationData = JSON.parse(sessionStorage.getItem('registrationData'));
-    // if (registrationData) {
-    //   setRegistrationData(registrationData);
-    //   fetchEducations();
-    // }
     if(registrationData){
       console.log("registrationData education/ cookies: ", registrationData);
       fetchEducations();
@@ -42,7 +45,18 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
       const data = await response.json();
 
       if (response.ok) {
-        setEducationEntries(data);
+        // Ensure all date fields are strings, not null
+        const formattedData = data.map(entry => ({
+          ...entry,
+          start_date: entry.start_date || '',
+          end_date: entry.end_date || '',
+          education_type: entry.education_type || '',
+          school_name: entry.school_name || '',
+          degree: entry.degree || '',
+          field_of_study: entry.field_of_study || '',
+          grade: entry.grade || ''
+        }));
+        setEducationEntries(formattedData);
       } else {
         if (handleTokenExpiration(data, router)) {
           return;
@@ -125,7 +139,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     const updatedEntries = [...educationEntries];
     updatedEntries[currentEntryIndex] = {
       ...updatedEntries[currentEntryIndex],
-      [field]: value
+      [field]: value || '' // Ensure value is never null
     };
     setEducationEntries(updatedEntries);
   };
@@ -149,7 +163,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
       if (response.ok) {
         // Update registration step
-        const updatedData = { ...registrationData, reg_step: 3 };
+        const updatedData = { ...registrationData, reg_step: 5 };
         Cookies.set('registrationData', JSON.stringify(updatedData), {
           expires: 0.0208, // 30 minutes
           secure: process.env.NODE_ENV === 'production',
@@ -299,7 +313,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
                         className={`form-control ${styles.formControl}`} 
                         id="start_date" 
                         placeholder="Enter start date" 
-                        value={entry.start_date}
+                        value={entry.start_date || ''}
                         onChange={(e) => handleFormChange('start_date', e.target.value)}
                         required
                       /> 
@@ -315,7 +329,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
                         className={`form-control ${styles.formControl}`} 
                         id="end_date" 
                         placeholder="Enter end date" 
-                        value={entry.end_date}
+                        value={entry.end_date || ''}
                         onChange={(e) => handleFormChange('end_date', e.target.value)}
                         required
                       /> 

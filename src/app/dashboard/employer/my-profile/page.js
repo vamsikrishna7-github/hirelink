@@ -5,6 +5,8 @@ import Image from 'next/image';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
+
 import { 
   FaBuilding, 
   FaGlobe, 
@@ -61,14 +63,14 @@ export default function Profile() {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
           headers: {
-            'Authorization': `Bearer ${getCookie('access_token')}`
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
         
         if (!response.ok) {
           const errorData = await response.json();
           if (errorData.code === 'token_not_valid') {
-            document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            Cookies.remove('access_token');
             router.push('/login');
             return;
           }
@@ -102,12 +104,6 @@ export default function Profile() {
 
     fetchProfileData();
   }, [router]);
-
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Present';
@@ -264,7 +260,7 @@ export default function Profile() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/update-profile-image/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getCookie('access_token')}`
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
         },
         body: formData
       });
@@ -374,7 +370,7 @@ export default function Profile() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educations/${education.id}/`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${getCookie('access_token')}`
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
 
@@ -405,7 +401,7 @@ export default function Profile() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/experiences/${experience.id}/`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${getCookie('access_token')}`
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
 
@@ -436,7 +432,7 @@ export default function Profile() {
       const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/update-user/`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${getCookie('access_token')}`,
+          'Authorization': `Bearer ${Cookies.get('access_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -452,7 +448,7 @@ export default function Profile() {
       const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employer/profile/`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${getCookie('access_token')}`,
+          'Authorization': `Bearer ${Cookies.get('access_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -476,7 +472,7 @@ export default function Profile() {
       // Refresh profile data
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
         headers: {
-          'Authorization': `Bearer ${getCookie('access_token')}`
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
         }
       });
 
@@ -522,7 +518,7 @@ export default function Profile() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-documents/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getCookie('access_token')}`
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
         },
         body: formData
       });

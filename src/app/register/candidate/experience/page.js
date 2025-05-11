@@ -126,7 +126,9 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
     const updatedEntries = [...experienceEntries];
     updatedEntries[currentEntryIndex] = {
       ...updatedEntries[currentEntryIndex],
-      [field]: value
+      [field]: value,
+      // If currently_working is checked, set end_date to null
+      ...(field === 'currently_working' && value ? { end_date: null } : {})
     };
     setExperienceEntries(updatedEntries);
   };
@@ -150,7 +152,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
 
       if (response.ok) {
         // Update registration step
-        const updatedData = { ...registrationData, reg_step: 4 };
+        const updatedData = { ...registrationData, reg_step: 6 };
         Cookies.set('registrationData', JSON.stringify(updatedData), {
           expires: 0.0208, // 30 minutes
           secure: process.env.NODE_ENV === 'production',
@@ -319,7 +321,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
                         className={`form-control ${styles.formControl}`} 
                         id="start_date" 
                         placeholder="Enter start date" 
-                        value={entry.start_date}
+                        value={entry.start_date || ''}
                         onChange={(e) => handleFormChange('start_date', e.target.value)}
                         required
                       /> 
@@ -335,7 +337,7 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
                         className={`form-control ${styles.formControl}`} 
                         id="end_date" 
                         placeholder="Enter end date" 
-                        value={entry.end_date}
+                        value={entry.end_date || ''}
                         onChange={(e) => handleFormChange('end_date', e.target.value)}
                         disabled={entry.currently_working}
                         required={!entry.currently_working}

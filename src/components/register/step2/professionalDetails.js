@@ -9,7 +9,6 @@ import Link from 'next/link';
 import validatePhone from '@/utils/validatePhone';
 import validateURL from '@/utils/validateURL';
 import { useRouter } from 'next/navigation';
-import IdentifyUser from '@/components/register/IdentifyUser';
 import Cookies from 'js-cookie';
 import { handleTokenExpiration } from '@/utils/authUtils';
 
@@ -240,8 +239,6 @@ export default function SignUpPage({ employer, consultancy, candidate, useremail
               <span className={styles.totalPages}>/{registrationData && registrationData.user_type === "candidate" ? 5 : 4}</span>
             </span>
           </div>
-
-          <IdentifyUser />
           
           <h1 className={`card-title ${styles.title}`}>Creating Your <span className={styles.userType}>{employer ? 'Employer' : consultancy ? 'Consultancy' : 'Candidate'}</span> Account</h1>
           

@@ -114,9 +114,27 @@ export default function GoogleLoginButton() {
               return;
             }
           }else{
-            document.cookie = `access_token=${data.access}; path=/; max-age=3600`;
-            document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
-            document.cookie = `user_type=${data.user_type}; path=/; max-age=3600`;
+            Cookies.set('access_token', data.access, {
+              expires: 1,
+              secure: true,
+              sameSite: 'Strict',
+              path: '/'
+            });
+            Cookies.set('refresh_token', data.refresh, {
+              expires: 1,
+              secure: true,
+              sameSite: 'Strict',
+              path: '/'
+            });
+            Cookies.set('user_type', data.user_type, {
+              expires: 1,
+              secure: true,
+              sameSite: 'Strict',
+              path: '/'
+            });
+            // document.cookie = `access_token=${data.access}; path=/; max-age=3600`;
+            // document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
+            // document.cookie = `user_type=${data.user_type}; path=/; max-age=3600`;
             router.push(`/dashboard/${data.user_type}`);
           }
 

@@ -80,7 +80,7 @@ const router = useRouter();
         <Link href="/dashboard/candidate/my-profile" className='text-decoration-none text-dark' onClick={handleLinkClick}>
         <div className={`${styles.userProfile} ${isMobile ? 'mb-5' : 'mb-3'}`} >
           <Image 
-            src={profileData?.profile?.profile_image || "/Dashboards/Default_DP.jpg"} 
+            src={profileData?.profile?.profile_image || `https://robohash.org/${profileData.user.name}.jpg?set=set3`} 
             alt="Profile" 
             className={styles.avatar}
             width={45}

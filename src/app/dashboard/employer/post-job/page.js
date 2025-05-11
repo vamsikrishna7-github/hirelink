@@ -1,140 +1,485 @@
-import { FiBriefcase, FiMapPin, FiClock, FiAward, FiFileText, FiUserCheck, FiDollarSign } from 'react-icons/fi';
+'use client'
+import { FiBriefcase, FiMapPin, FiClock, FiAward, FiFileText, FiUserCheck, FiDollarSign, FiCalendar, FiUsers, FiGlobe, FiMail, FiTag } from 'react-icons/fi';
 import styles from './page.module.css';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { ClipLoader } from 'react-spinners';
 
 export default function PostJob() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    title: '',
+    company_name: '',
+    company_website: '',
+    company_email: '',
+    company_logo: '',
+    location: 'Chennai',
+    work_mode: 'hybrid',
+    job_type: 'full-time',
+    experience_level: 'senior',
+    industry: 'Technology',
+    min_salary: '',
+    max_salary: '',
+    currency: 'USD',
+    salary_type: 'yearly',
+    description: '',
+    requirements: '',
+    responsibilities: '',
+    skills_required: '',
+    deadline: '',
+    vacancies: 1
+  });
+
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`, {
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch company data');
+        }
+
+        const fetchedUserData = await response.json();
+        
+        setFormData(prev => ({
+          ...prev,
+          company_name: fetchedUserData.profile.company_name || '',
+          company_website: fetchedUserData.profile.website_url || '',
+          company_email: fetchedUserData.user.email || '',
+          company_logo: fetchedUserData.profile.profile_image || ''
+        }));
+      } catch (error) {
+        console.error('Error fetching company data:', error);
+        setError('Failed to load company information. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanyData();
+  }, []);
+
+  useEffect(() => {
+    let timer;
+    if (success) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/dashboard/employer/posted-jobs');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [success, router]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      console.log('Submitting job data:', formData);
+      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Error response:', errorData);
+        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      
+      setSuccess(true);
+      setCountdown(5);
+    } catch (error) {
+      console.error('Error posting job:', error);
+      setError(error.message || 'Failed to post job. Please try again.');
+      alert(error.message || 'Failed to post job. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container py-3">
       <div className="row justify-content-center">
         <div className="col-lg-9">
-          <form className={`${styles.card} shadow-sm p-4 p-md-5`}>
+          <form onSubmit={handleSubmit} className={`${styles.card} shadow-sm p-4 p-md-5`}>
+            {error && (
+              <div className="alert alert-danger mb-4" role="alert">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="alert alert-success mb-4 d-flex align-items-center" role="alert">
+                <div className="me-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                  </svg>
+                </div>
+                <div>
+                  Job posted successfully! Redirecting to posted jobs in {countdown} seconds...
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <h2 className={`${styles.heading} fw-bold mb-0`}>Post a Job</h2>
-              <div className={`${styles.subheading} mt-2`}>Yeddala Sukumar • Microsoft</div>
             </div>
 
-            {/* Job Title & Location */}
             <div className="row gx-3">
-               <div className="col-md-6 mb-4">
-                    <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                    <FiBriefcase /> Job Title
-                    </label>
-                    <input 
-                    type="text" 
-                    className={`${styles.input} form-control`} 
-                    placeholder="UI UX Designer" 
-                    defaultValue="UI UX Designer"
-                    />
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiBriefcase /> Job Title
+                </label>
+                <input 
+                  type="text" 
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className={`${styles.input} form-control`} 
+                  placeholder="Senior Python Developer" 
+                  required
+                />
               </div>
               <div className="col-md-6 mb-4">
                 <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                    <FiMapPin /> Location
+                  <FiBriefcase /> Company Name
                 </label>
-                <select className={`${styles.input} form-select`} defaultValue="Chennai">
-                  <option>Chennai</option>
-                  <option>Mumbai</option>
-                  <option>Delhi</option>
-                  <option>Bangalore</option>
-                  <option>Hyderabad</option>
-                  <option>Kolkata</option>
-                  <option>Pune</option>
-                  <option>Jaipur</option>
-                  <option>Ahmedabad</option>
-                  <option>Surat</option>
-                  <option>Lucknow</option>
-                  <option>Kanpur</option>
-                  <option>Indore</option>
-                  <option>Bhopal</option>
-                  <option>Gurgaon</option>
-                  <option>Noida</option>
-                  <option>Ghaziabad</option>
-                  <option>Faridhabad</option>
-                  <option>Nashik</option>
-                  <option>Bhubaneswar</option>
-                  <option>Visakhapatnam</option>
-                  <option>Bhopal</option>
-                  
+                <input 
+                  type="text" 
+                  name="company_name"
+                  value={formData.company_name}
+                  className={`${styles.input} form-control bg-light`} 
+                  readOnly
+                />
+              </div>
+            </div>
+
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiGlobe /> Company Website
+                </label>
+                <input 
+                  type="url" 
+                  name="company_website"
+                  value={formData.company_website}
+                  className={`${styles.input} form-control bg-light`} 
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiMail /> Company Email
+                </label>
+                <input 
+                  type="email" 
+                  name="company_email"
+                  value={formData.company_email}
+                  className={`${styles.input} form-control bg-light`} 
+                  readOnly
+                />
+              </div>
+            </div>
+
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiMapPin /> Location
+                </label>
+                <input 
+                  type="text" 
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className={`${styles.input} form-control`} 
+                  placeholder="New York, NY" 
+                  required
+                />
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiClock /> Work Mode
+                </label>
+                <select 
+                  name="work_mode"
+                  value={formData.work_mode}
+                  onChange={handleChange}
+                  className={`${styles.input} form-select`}
+                  required
+                >
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="onsite">On-site</option>
                 </select>
               </div>
             </div>
 
-            {/* Job Type & Qualification Row */}
             <div className="row gx-3">
               <div className="col-md-6 mb-4">
                 <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
                   <FiClock /> Job Type
                 </label>
-                <select className={`${styles.input} form-select`} defaultValue="Full Time">
-                  <option>Full Time</option>
-                  <option>Part Time</option>
-                  <option>Contract</option>
-                  <option>Internship</option>
-                  <option>Remote</option>
-                  <option>Hybrid</option>
-                  <option>Freelance</option>
+                <select 
+                  name="job_type"
+                  value={formData.job_type}
+                  onChange={handleChange}
+                  className={`${styles.input} form-select`}
+                  required
+                >
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                  <option value="freelance">Freelance</option>
+                  <option value="temporary">Temporary</option>
                 </select>
               </div>
               <div className="col-md-6 mb-4">
                 <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                  <FiAward /> Required Qualification
+                  <FiUsers /> Experience Level
+                </label>
+                <select 
+                  name="experience_level"
+                  value={formData.experience_level}
+                  onChange={handleChange}
+                  className={`${styles.input} form-select`}
+                  required
+                >
+                  <option value="entry">Entry Level</option>
+                  <option value="mid">Mid Level</option>
+                  <option value="senior">Senior Level</option>
+                  <option value="director">Director</option>
+                  <option value="executive">Executive</option>
+                  <option value="lead">Lead</option>
+                  <option value="manager">Manager</option>
+                  <option value="intern">Intern</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiTag /> Industry
                 </label>
                 <input 
                   type="text" 
+                  name="industry"
+                  value={formData.industry}
+                  onChange={handleChange}
                   className={`${styles.input} form-control`} 
-                  placeholder="B.E/B.Tech" 
-                  defaultValue="B.E/B.Tech"
+                  placeholder="Technology" 
+                  required
+                />
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiTag /> Skills Required
+                </label>
+                <input 
+                  type="text" 
+                  name="skills_required"
+                  value={formData.skills_required}
+                  onChange={handleChange}
+                  className={`${styles.input} form-control`} 
+                  placeholder="Python,Django,PostgreSQL,AWS" 
+                  required
                 />
               </div>
             </div>
 
-            {/* Responsibilities Section */}
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiDollarSign /> Salary Range
+                </label>
+                <div className="d-flex gap-2">
+                  <input 
+                    type="number" 
+                    name="min_salary"
+                    value={formData.min_salary}
+                    onChange={handleChange}
+                    className={`${styles.input} form-control`} 
+                    placeholder="Min Salary" 
+                    required
+                  />
+                  <input 
+                    type="number" 
+                    name="max_salary"
+                    value={formData.max_salary}
+                    onChange={handleChange}
+                    className={`${styles.input} form-control`} 
+                    placeholder="Max Salary" 
+                    required
+                  />
+                </div>
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiDollarSign /> Salary Type
+                </label>
+                <select 
+                  name="salary_type"
+                  value={formData.salary_type}
+                  onChange={handleChange}
+                  className={`${styles.input} form-select`}
+                  required
+                >
+                  <option value="yearly">Yearly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="hourly">Hourly</option>
+                </select>
+              </div>
+            </div>
+
             <div className="mb-4">
               <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                <FiFileText /> Responsibilities
+                <FiFileText /> Job Description
               </label>
               <textarea 
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
                 className={`${styles.textarea} form-control`} 
                 rows={5}
-                defaultValue={`• Create user-centered designs by understanding business requirements and user feedback
-• Design UI elements, such as input controls, navigational components, and informational components
-• Collaborate with developers, product managers, and other stakeholders
-• Conduct usability testing and gather feedback
-• Maintain consistency of designs across different platforms`}
+                placeholder="We are looking for an experienced Python developer..."
+                required
               ></textarea>
             </div>
 
-            {/* Requirements Section */}
             <div className="mb-4">
               <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
                 <FiUserCheck /> Requirements
               </label>
               <textarea 
+                name="requirements"
+                value={formData.requirements}
+                onChange={handleChange}
                 className={`${styles.textarea} form-control`} 
                 rows={5}
-                defaultValue={`• Basic knowledge of Figma (or other UI/UX design tools)
-• Good understanding of UX principles
-• Strong communication and collaboration skills
-• A portfolio of previous design projects (college projects acceptable)`}
+                placeholder="5+ years of Python experience..."
+                required
               ></textarea>
             </div>
 
-            {/* Benefits Section */}
             <div className="mb-4">
               <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                <FiDollarSign /> Benefits
+                <FiFileText /> Responsibilities
               </label>
               <textarea 
+                name="responsibilities"
+                value={formData.responsibilities}
+                onChange={handleChange}
                 className={`${styles.textarea} form-control`} 
-                rows={3}
-                defaultValue={`• Flexible working hours
-• Career growth opportunities
-• Collaborative and supportive team environment`}
+                rows={5}
+                placeholder="Develop and maintain backend services..."
+                required
               ></textarea>
             </div>
 
-            {/* Submit Button */}
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiCalendar /> Application Deadline
+                </label>
+                <input 
+                  type="date" 
+                  name="deadline"
+                  value={formData.deadline}
+                  onChange={handleChange}
+                  className={`${styles.input} form-control`} 
+                  required
+                />
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiUsers /> Number of Vacancies
+                </label>
+                <input 
+                  type="number" 
+                  name="vacancies"
+                  value={formData.vacancies}
+                  onChange={handleChange}
+                  className={`${styles.input} form-control`} 
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="d-grid gap-2 mt-5">
-              <button type="submit" className={`${styles.submitbtn} btn rounded-3 py-3 fw-bold`}>
-                Post Job
+              <button 
+                type="submit" 
+                disabled={isSubmitting || success || isLoading}
+                className={`${styles.submitbtn} btn rounded-3 py-3 fw-bold position-relative`}
+              >
+                {isLoading ? (
+                  <>
+                    <ClipLoader 
+                      color="#ffffff" 
+                      size={20} 
+                      className="me-2"
+                    />
+                    Loading...
+                  </>
+                ) : isSubmitting ? (
+                  <>
+                    <ClipLoader 
+                      color="#ffffff" 
+                      size={20} 
+                      className="me-2"
+                    />
+                    Posting...
+                  </>
+                ) : success ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-check-circle me-2" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                      <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </svg>
+                    Posted Successfully
+                  </>
+                ) : (
+                  'Post Job'
+                )}
               </button>
             </div>
           </form>
