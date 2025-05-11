@@ -19,6 +19,7 @@ const nextConfig = {
       'google.com',
       'icons.duckduckgo.com',
       'www.google.com',
+      'robohash.org',
       'res.cloudinary.com',
     ],
   },

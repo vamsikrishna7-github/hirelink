@@ -26,8 +26,8 @@ export default function StatusPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: regData.email })
+          'Authorization': `Bearer ${regData.access}`
+        }
       })
 
       if (!response.ok) {

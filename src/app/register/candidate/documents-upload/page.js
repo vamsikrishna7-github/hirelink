@@ -84,11 +84,13 @@ const DocumentsUpload = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('email', email);
       formData.append('resume', file);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-documents/`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${regData.access}`
+        },
         body: formData,
       });
 

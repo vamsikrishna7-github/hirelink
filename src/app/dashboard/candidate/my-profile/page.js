@@ -607,7 +607,7 @@ export default function Profile() {
           <div className={styles.profileImage}>
             {!isEditMode ? (
               <Image 
-                src={profileData.profile.profile_image || '/My_profile.webp'} 
+                src={profileData.profile.profile_image || `https://robohash.org/${profileData.user.name}.png?set=set3`} 
                 alt="Profile" 
                 width={180} 
                 height={180} 
@@ -622,7 +622,7 @@ export default function Profile() {
               <div className="position-relative w-100 h-100">
                 <div className="position-relative w-100 h-100">
                   <Image 
-                    src={imagePreview || profileData.profile.profile_image || '/My_profile.webp'} 
+                    src={imagePreview || profileData.profile.profile_image || `https://robohash.org/${profileData.user.name}.png?set=set3`} 
                     alt="Profile" 
                     width={180} 
                     height={180} 

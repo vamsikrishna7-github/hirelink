@@ -127,9 +127,7 @@ const DocumentsUpload = () => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('email', email);
-      
+      const formData = new FormData();      
       // Append all files with meaningful names
       Object.entries(files).forEach(([key, file]) => {
         const field = documentFields.find(f => f.key === key);
@@ -140,6 +138,9 @@ const DocumentsUpload = () => {
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload-documents/`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${regData.access}`
+        },
         body: formData,
       });
 
