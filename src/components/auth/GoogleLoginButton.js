@@ -132,6 +132,12 @@ export default function GoogleLoginButton() {
               sameSite: 'Strict',
               path: '/'
             });
+            Cookies.set('email', profileData.email, {
+              expires: 1,
+              secure: true,
+              sameSite: 'Strict',
+              path: '/'
+            });
             // document.cookie = `access_token=${data.access}; path=/; max-age=3600`;
             // document.cookie = `refresh_token=${data.refresh}; path=/; max-age=604800`;
             // document.cookie = `user_type=${data.user_type}; path=/; max-age=3600`;

@@ -151,6 +151,12 @@ export default function Login() {
           sameSite: 'Strict',
           path: '/'
         });
+        Cookies.set('email', profileData.email, {
+          expires: 1,
+          secure: true,
+          sameSite: 'Strict',
+          path: '/'
+        });
         // document.cookie = `access_token=${authData.access}; path=/; max-age=3600`;
         // document.cookie = `refresh_token=${authData.refresh}; path=/; max-age=604800`;
         // document.cookie = `user_type=${profileData.user_type}; path=/; max-age=3600`;

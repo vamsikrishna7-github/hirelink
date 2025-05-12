@@ -1,73 +1,71 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Posted-jobs.module.css";
 import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
+import Cookies from "js-cookie";
+import { ClipLoader } from "react-spinners";
+import Link from "next/link";
 
-const initialJobs = [
-  {
-    id: "01",
-    title: "Senior Frontend Developer",
-    applications: 24,
-    date: "2024-03-15",
-    status: "Active",
-    level: "Senior"
-  },
-  {
-    id: "02",
-    title: "Product Designer",
-    applications: 10,
-    date: "2024-03-10",
-    status: "Active",
-    level: "Mid"
-  },
-  {
-    id: "03",
-    title: "Product Manager",
-    applications: 40,
-    date: "2024-02-28",
-    status: "Inactive",
-    level: "Senior"
-  },
-  {
-    id: "04",
-    title: "Python Developer",
-    applications: 50,
-    date: "2024-03-05",
-    status: "Active",
-    level: "Mid"
-  },
-  {
-    id: "05",
-    title: "Java Developer",
-    applications: 11,
-    date: "2024-03-12",
-    status: "Active",
-    level: "Junior"
-  },
-  {
-    id: "06",
-    title: "React Developer",
-    applications: 13,
-    date: "2024-03-18",
-    status: "Active",
-    level: "Mid"
-  },
-];
+
+
+async function getJobs() {
+  try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`,
+        {
+          headers: {
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        }
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch jobs');
+  }
+
+  const data = await response.json();
+  return data;
+}catch (error) {
+  console.error('Error fetching jobs:', error);
+}
+}
 
 export default function PostedJobsPage() {
-  const [jobs, setJobs] = useState(initialJobs);
+  const [jobs, setJobs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+      const fetchJobs = async () => {
+        try {
+          setIsLoading(true);
+          const jobs = await getJobs();
+          setJobs(jobs);
+        } catch (error) {
+          console.error('Error fetching jobs:', error);
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchJobs();
+  }, []);
 
   // Filter jobs based on search and filters
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || job.status === statusFilter;
-    const matchesLevel = levelFilter === "All" || job.level === levelFilter;
+    const matchesSearch = job.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Status filter: 'All', 'Active', 'Inactive' mapped to is_published
+    let matchesStatus = true;
+    if (statusFilter === "Active") matchesStatus = job.is_published === true;
+    else if (statusFilter === "Inactive") matchesStatus = job.is_published === false;
+    // Level filter: 'All', 'Junior', 'Mid', 'Senior', etc. mapped to experience_level
+    let matchesLevel = true;
+    if (levelFilter !== "All") matchesLevel = (job.experience_level?.toLowerCase() === levelFilter.toLowerCase());
     return matchesSearch && matchesStatus && matchesLevel;
   });
 
@@ -92,15 +90,43 @@ export default function PostedJobsPage() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <div className="text-center">
+          <ClipLoader color="#0d6efd" size={50} />
+          <p className="mt-3 text-black">Fetching content, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <h2 className="text-red-600 text-xl font-semibold mb-2">Error Loading Profile</h2>
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`container-fluid min-vh-100 bg-transparent ${styles.wrapper}`}>
       <div className="row justify-content-center pt-2">
         <div className="p-0">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h4 className="mb-0 fw-bold">Posted Jobs</h4>
-            <button className={`btn btn-primary d-flex align-items-center gap-2 ${styles["btn-modern"]}`}>
+            <Link href="/dashboard/employer/post-job" className={`btn btn-primary d-flex align-items-center gap-2 ${styles["btn-modern"]}`}>
               <FiPlus size={18} /> Post New Job
-            </button>
+            </Link>
           </div>
 
           {/* Filters and Search */}
@@ -156,9 +182,15 @@ export default function PostedJobsPage() {
                     </button>
                     <ul className="dropdown-menu w-100">
                       <li><button className="dropdown-item" onClick={() => handleLevelFilter("All")}>All Levels</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Entry")}>Entry</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Intern")}>Intern</button></li>
                       <li><button className="dropdown-item" onClick={() => handleLevelFilter("Junior")}>Junior</button></li>
                       <li><button className="dropdown-item" onClick={() => handleLevelFilter("Mid")}>Mid</button></li>
                       <li><button className="dropdown-item" onClick={() => handleLevelFilter("Senior")}>Senior</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Lead")}>Lead</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Manager")}>Manager</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Director")}>Director</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Executive")}>Executive</button></li>
                     </ul>
                   </div>
                 </div>
@@ -172,10 +204,10 @@ export default function PostedJobsPage() {
               <table className={`${styles.table} table table-hover mb-0 bg-transparent table-striped`}>
                 <thead className="bg-transparent fw-bold">
                   <tr>
-                    <th className="ps-4">ID</th>
+                    <th className="ps-4">S.No</th>
                     <th>Job Title</th>
                     <th>Level</th>
-                    <th>Applications</th>
+                    <th>Location</th>
                     <th>Posted Date</th>
                     <th>Status</th>
                     <th className="text-end pe-4">Actions</th>
@@ -183,9 +215,10 @@ export default function PostedJobsPage() {
                 </thead>
                 <tbody>
                   {currentJobs.length > 0 ? (
-                    currentJobs.map((job) => (
-                      <tr key={job.id}>
-                        <td className="ps-4 fw-semibold">{job.id}</td>
+                    currentJobs.map((job, index) => (
+                      (job?.posted_by?.email === Cookies.get('email') && (
+                        <tr key={job.id}>
+                          <td className="ps-4 fw-semibold">{index + 1}</td>
                         <td>
                           <div className="d-flex flex-column">
                             <span className="fw-semibold">{job.title}</span>
@@ -194,23 +227,29 @@ export default function PostedJobsPage() {
                         </td>
                         <td>
                           <span className={`badge ${
-                            job.level === "Junior" ? "bg-info" :
-                            job.level === "Mid" ? "bg-primary" : "bg-warning"
+                            job.experience_level === "entry" ? "bg-info" :
+                            job.experience_level === "mid" ? "bg-primary" :
+                            job.experience_level === "senior" ? "bg-warning" :
+                            job.experience_level === "director" ? "bg-danger" :
+                            job.experience_level === "executive" ? "bg-success" :
+                            job.experience_level === "lead" ? "bg-warning" :
+                            job.experience_level === "manager" ? "bg-primary" :
+                            job.experience_level === "intern" ? "bg-info" : "bg-secondary"
                           }`}>
-                            {job.level}
+                            {job.experience_level}
                           </span>
                         </td>
                         <td>
-                          <span className="fw-semibold">{job.applications}</span>
+                          <span className="fw-semibold">{job.location}</span>
                         </td>
-                        <td>{formatDate(job.date)}</td>
+                        <td>{formatDate(job.created_at)}</td>
                         <td>
                           <span className={`badge rounded-pill ${
-                            job.status === "Active" 
+                            job.is_published === true 
                               ? "bg-success bg-opacity-10 text-success" 
                               : "bg-danger bg-opacity-10 text-danger"
                           }`}>
-                            {job.status}
+                            {job.is_published ? "Active" : "Inactive"}
                           </span>
                         </td>
                         <td className="text-end pe-4">
@@ -230,6 +269,7 @@ export default function PostedJobsPage() {
                           </div>
                         </td>
                       </tr>
+                      ))
                     ))
                   ) : (
                     <tr>
