@@ -6,64 +6,239 @@ import { FiBookmark } from 'react-icons/fi';
 import styles from './Jobs.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import ClipLoader from 'react-spinners/ClipLoader';
+
 
 const Jobs = () => {
-  const jobs = [
-    {
-      company: "Microsoft",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Canon",
-      logo: "https://1000logos.net/wp-content/uploads/2016/10/Canon-logo.jpg",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Razer",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0CL18TsZPEpYmfVwb1_SR7ePvkCDmqrXOQ&s",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
+  // const jobs = [
+  //   {
+  //     company: "Microsoft",
+  //     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png",
+  //     title: "UI/UX Designer",
+  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
+  //     type: ["Full Time", "Remote", "Any Level"]
+  //   },
+  //   {
+  //     company: "Canon",
+  //     logo: "https://1000logos.net/wp-content/uploads/2016/10/Canon-logo.jpg",
+  //     title: "UI/UX Designer",
+  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
+  //     type: ["Full Time", "Remote", "Any Level"]
+  //   },
+  //   {
+  //     company: "Razer",
+  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0CL18TsZPEpYmfVwb1_SR7ePvkCDmqrXOQ&s",
+  //     title: "UI/UX Designer",
+  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
+  //     type: ["Full Time", "Remote", "Any Level"]
+  //   }
+  // ];
+
+
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    experience: '',
+    location: '',
+    postedDate: '',
+    jobType: ''
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs`,{
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message);
+          throw new Error('Failed to fetch jobs');
+        }
+        
+        console.log('Fetched jobs data:', data);
+        setJobs(data);
+        setFilteredJobs(data); // Set filtered jobs initially to all jobs
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const applyFilters = () => {
+    let result = [...jobs];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(job => 
+        job.title.toLowerCase().includes(query) ||
+        job.company_name.toLowerCase().includes(query) ||
+        job.description.toLowerCase().includes(query)
+      );
     }
-  ];
+
+    if (filters.experience) {
+      result = result.filter(job => job.experience_level === filters.experience);
+    }
+
+    if (filters.location) {
+      result = result.filter(job => job.location.toLowerCase() === filters.location.toLowerCase());
+    }
+
+    if (filters.jobType) {
+      result = result.filter(job => job.job_type === filters.jobType);
+    }
+
+    if (filters.postedDate) {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (filters.postedDate) {
+        case '24h':
+          filterDate.setHours(now.getHours() - 24);
+          break;
+        case '7d':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case '15d':
+          filterDate.setDate(now.getDate() - 15);
+          break;
+        case '30d':
+          filterDate.setDate(now.getDate() - 30);
+          break;
+        default:
+          break;
+      }
+      
+      result = result.filter(job => new Date(job.created_at) >= filterDate);
+    }
+
+    setFilteredJobs(result);
+  };
+
+  useEffect(() => {
+    console.log('Current jobs state:', jobs);
+    console.log('Current filtered jobs:', filteredJobs);
+    applyFilters();
+  }, [filters, searchQuery]);
+
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <div className="text-center">
+          <ClipLoader color="#0d6efd" size={50} />
+          <p className="mt-3 text-black">Fetching content, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <h2 className="text-red-600 text-xl font-semibold mb-2">Error Loading Profile</h2>
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className={styles.jobsContainer}>
       <div className={styles.filterSection}>
+        <div className={`${styles.searchBar}`}>
+          <FaSearch className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Search jobs, companies, or keywords..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className={styles.searchInput}
+          />
+        </div>
         
         <div className={styles.filters}>
           <div className={styles.filterItem}>
             <FaBriefcase />
-            <select defaultValue="" className={styles.filterSelect}>
+            <select 
+              value={filters.experience}
+              onChange={(e) => handleFilterChange('experience', e.target.value)}
+              className={styles.filterSelect}
+            >
               <option value="" disabled>Experience Level</option>
-              <option value="0-1">0-1 Year</option>
-              <option value="1-2">1-2 Years</option>
-              <option value="2-3">2-3 Years</option>
-              <option value="3-5">3-5 Years</option>
-              <option value="5+">5+ Years</option>
+              <option value="entry">Entry Level</option>
+              <option value="mid">Mid Level</option>
+              <option value="senior">Senior Level</option>
+              <option value="executive">Executive Level</option>
             </select>
           </div>
 
           <div className={styles.filterItem}>
             <FaMapMarkerAlt />
-            <select defaultValue="" className={styles.filterSelect}>
+            <select 
+              value={filters.location}
+              onChange={(e) => handleFilterChange('location', e.target.value)}
+              className={styles.filterSelect}
+            >
               <option value="" disabled>Location</option>
-              <option value="mumbai">Mumbai</option>
-              <option value="delhi">Delhi</option>
-              <option value="bangalore">Bangalore</option>
-              <option value="hyderabad">Hyderabad</option>
-              <option value="chennai">Chennai</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="New York">New York</option>
             </select>
           </div>
 
           <div className={styles.filterItem}>
             <FaClock />
-            <select defaultValue="" className={styles.filterSelect}>
+            <select 
+              value={filters.postedDate}
+              onChange={(e) => handleFilterChange('postedDate', e.target.value)}
+              className={styles.filterSelect}
+            >
               <option value="" disabled>Posted Date</option>
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
@@ -74,7 +249,11 @@ const Jobs = () => {
 
           <div className={styles.filterItem}>
             <FaBriefcase />
-            <select defaultValue="" className={styles.filterSelect}>
+            <select 
+              value={filters.jobType}
+              onChange={(e) => handleFilterChange('jobType', e.target.value)}
+              className={styles.filterSelect}
+            >
               <option value="" disabled>Job Type</option>
               <option value="full-time">Full Time</option>
               <option value="part-time">Part Time</option>
@@ -84,37 +263,54 @@ const Jobs = () => {
             </select>
           </div>
         </div>
-        <button className={`${styles.searchButton} rounded-5`}>
-            <FaSearch />
-          </button>
       </div>
 
       <div className={styles.jobsGrid}>
-        {jobs.map((job, index) => (
-          <div key={index} className={styles.jobCard}>
+        {filteredJobs.map((job) => (
+          <div key={job.id} className={styles.jobCard}>
             <div className={styles.jobHeader}>
               <div className={styles.companyLogo}>
                 <Image
-                  src={job.logo}
-                  alt={`${job.company} logo`}
-                  width={40}
-                  height={40}
+                  src={job.company_logo || '/Dashboards/default_company.svg'}
+                  alt={`${job.company_name} logo`}
+                  width={60}
+                  height={60}
+                  className={styles.logoImage}
+                  onError={(e) => {
+                    e.target.src = '/Dashboards/default_company.svg';
+                  }}
                 />
               </div>
               <div className={styles.jobTitle}>
-                <h4>{job.title}</h4>
-                <p>{job.company}</p>
+                <h4 className={styles.title}>{job.title}</h4>
+                <p className={styles.companyName}>{job.company_name}</p>
+                <p className={styles.location}>
+                  <FaMapMarkerAlt className={styles.locationIcon} />
+                  {job.location}
+                </p>
               </div>
             </div>
-            <p className={styles.jobDescription}>{job.description}</p>
+            <p className={styles.jobDescription}>
+              {job.description?.length > 150 
+                ? `${job.description.substring(0, 150)}...` 
+                : job.description}
+            </p>
             <div className={styles.jobTags}>
-              {job.type.map((tag, idx) => (
-                <span key={idx} className={styles.tag}>{tag}</span>
-              ))}
+              <span className={styles.tag}>{job.job_type}</span>
+              <span className={styles.tag}>{job.experience_level}</span>
+              <span className={styles.tag}>{job.work_mode}</span>
+              <span className={styles.tag}>
+                <FaClock className={styles.tagIcon} />
+                {formatDate(job.created_at)}
+              </span>
             </div>
             <div className={styles.jobActions}>
-              <button className={styles.saveButton}> <FiBookmark /> Save</button>
-              <Link href="/dashboard/candidate/apply-job"><button className={styles.applyButton}>Apply Now</button></Link>
+              <button className={styles.saveButton}>
+                <FiBookmark className={styles.saveIcon} /> Save
+              </button>
+              <Link href={`/dashboard/candidate/apply-job/${job.id}`}>
+                <button className={styles.applyButton}>Apply Now</button>
+              </Link>
             </div>
           </div>
         ))}
