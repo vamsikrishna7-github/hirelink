@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { ClipLoader } from 'react-spinners';
+import { toast } from 'react-toastify';
+
 
 export default function PostJob() {
   const router = useRouter();
@@ -47,6 +49,7 @@ export default function PostJob() {
         });
 
         if (!response.ok) {
+          toast.error('Failed to fetch company data');
           throw new Error('Failed to fetch company data');
         }
 
@@ -60,6 +63,7 @@ export default function PostJob() {
           company_logo: fetchedUserData.profile.profile_image || ''
         }));
       } catch (error) {
+        toast.error('Failed to load company information. Please try again.');
         console.error('Error fetching company data:', error);
         setError('Failed to load company information. Please try again.');
       } finally {
@@ -118,12 +122,13 @@ export default function PostJob() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         console.error('Error response:', errorData);
+        toast.error(errorData?.message || `HTTP error! status: ${response.status}`);
         throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('Success response:', data);
-      
+      toast.success('Job posted successfully!');
       setSuccess(true);
       setCountdown(5);
     } catch (error) {

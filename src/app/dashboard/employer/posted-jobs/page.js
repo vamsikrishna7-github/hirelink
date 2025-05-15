@@ -6,7 +6,8 @@ import { BiFilterAlt } from "react-icons/bi";
 import Cookies from "js-cookie";
 import { ClipLoader } from "react-spinners";
 import Link from "next/link";
-
+import PostedjobActionbtn from "@/components/employer/models/PostedjobActionbtn";
+import { toast } from 'react-toastify';
 
 
 async function getJobs() {
@@ -39,6 +40,7 @@ export default function PostedJobsPage() {
   const jobsPerPage = 5;
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
 
   useEffect(() => {
       const fetchJobs = async () => {
@@ -254,18 +256,7 @@ export default function PostedJobsPage() {
                         </td>
                         <td className="text-end pe-4">
                           <div className="d-flex justify-content-end gap-2">
-                            <button 
-                              className={`btn btn-sm btn-outline-secondary d-flex align-items-center ${styles["btn-modern"]}`}
-                              title="Edit"
-                            >
-                              <FiEdit2 size={16} />
-                            </button>
-                            <button 
-                              className={`btn btn-sm btn-primary d-flex align-items-center ${styles["btn-modern"]}`}
-                              title="View"
-                            >
-                              <FiEye size={16} />
-                            </button>
+                            <PostedjobActionbtn data={job} />
                           </div>
                         </td>
                       </tr>
