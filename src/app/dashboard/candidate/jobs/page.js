@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter, FaCheckCircle } from 'react-icons/fa';
 import { FiBookmark } from 'react-icons/fi';
 import styles from './Jobs.module.css';
 import Image from 'next/image';
@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
+
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -42,10 +43,20 @@ const Jobs = () => {
             'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
+
+        const appliedJobs = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
         const savedJobsData = await savedJobs.json();
+        const appliedJobsData = await appliedJobs.json();
         const data = await response.json();
         data.forEach(job => {
           job.isSaved = savedJobsData.some(savedJob => savedJob.job === job.id);
+          job.isApplied = appliedJobsData.some(appliedJob => appliedJob.job === job.id);
         });
 
         if (!response.ok) {
@@ -164,8 +175,8 @@ const Jobs = () => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error('Failed to save job');
       toast.error('Failed to save job');
+      throw new Error('Failed to save job');
     }
     
     // Update the isSaved state for the specific job
@@ -346,11 +357,16 @@ const Jobs = () => {
             <div className={styles.jobActions}>
               <button className={`${job.isSaved ? styles.saveButtonSaved : styles.saveButton}`}
                 onClick={() => handleSaveJob(job.id)}
+                disabled={job.isSaved}
               >
                 <FiBookmark className={styles.saveIcon} /> {job.isSaved ? 'Saved' : 'Save'}
               </button>
-              <Link href={`/dashboard/candidate/apply-job/${job.id}`}>
-                <button className={styles.applyButton}>Apply Now</button>
+              <Link href={`/dashboard/candidate/apply-job/${job.id}`}
+                 className={`${job.isApplied ? `${styles.applyButtonApplied} ` : styles.applyButton} btn`}
+                 disabled={job.isApplied}
+                 aria-disabled={job.isApplied}
+                >
+                  {job.isApplied ? <><FaCheckCircle /> Applied</> : 'Apply Now'}
               </Link>
             </div>
           </div>

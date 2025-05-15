@@ -260,6 +260,18 @@
   background-color: #0b5ed7;
 }
 
+.applyButtonApplied {
+  background-color: #4CAF50; 
+  color: white;
+  border: none;
+  cursor: not-allowed;
+}
+
+.applyButtonApplied:hover {
+  background-color: #4CAF50;
+}
+
+
 @media (max-width: 768px) {
   .jobsContainer {
     padding: 1rem;

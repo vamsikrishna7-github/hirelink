@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter, FaCheckCircle } from 'react-icons/fa';
 import { FiBookmark } from 'react-icons/fi';
 import styles from './Saved.module.css';
 import Image from 'next/image';
@@ -48,12 +48,26 @@ const SavedJobs = () => {
         }
       });
 
-      const alljobsdata = await alljobs.json();
+      const appliedJobs = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications/`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        }
+      });
 
+      const alljobsdata = await alljobs.json();
+      const appliedJobsData = await appliedJobs.json();
       const savedjobs = alljobsdata.filter(job => 
         data.some(savedJob => savedJob.job === job.id)
       );
-      
+      savedjobs.forEach(job => {
+        appliedJobsData.forEach(appliedJob => {
+          if (appliedJob.job === job.id) {
+            job.isApplied = true;
+          }
+        });
+      });
+      console.log(savedjobs);
       
       setSavedJobs(savedjobs);
     } catch (err) {
@@ -258,7 +272,12 @@ const SavedJobs = () => {
                 <FiBookmark className={styles.saveIcon} /> Remove
               </button>
               <Link href={`/dashboard/candidate/apply-job/${job.id}`}>
-                <button className={styles.applyButton}>Apply Now</button>
+                <button 
+                className={`${job.isApplied ? `${styles.applyButtonApplied} btn-success` : styles.applyButton} btn`}
+                disabled={job.isApplied}
+                >
+                  {job.isApplied ? <><FaCheckCircle /> Applied</> : 'Apply Now'}
+                </button>
               </Link>
             </div>
           </div>

@@ -7,6 +7,9 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { FaCheckCircle } from 'react-icons/fa';
+
+
 
 export default function ApplyJobPage() {
   const params = useParams();
@@ -16,6 +19,7 @@ export default function ApplyJobPage() {
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [applied, setApplied] = useState(false);
 
   const fetchJobDetails = async () => {
     try {
@@ -35,13 +39,26 @@ export default function ApplyJobPage() {
           'Authorization': `Bearer ${Cookies.get('access_token')}`
         }
       });
+
+      const appliedJob = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/applications/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        }
+      });
       const savedJobData = await savedJob.json();
+      const appliedJobData = await appliedJob.json();
       savedJobData.forEach(job => {
         if (job.job === parseInt(id)) {
           setSaved(true);
         }
       });
-      
+      appliedJobData.forEach(job => {
+        if (job.job === parseInt(id)) {
+          setApplied(true);
+        }
+      });
 
       setJobData(data);
     } catch (error) {
@@ -69,7 +86,7 @@ export default function ApplyJobPage() {
       });
       
       if (!response.ok) throw new Error('Failed to apply for job');
-      
+      setApplied(true);
       toast.success('Successfully applied for the job!');
     } catch (error) {
       toast.error('Error applying for job');
@@ -125,11 +142,7 @@ export default function ApplyJobPage() {
         <div className="row g-0 align-items-center p-4">
           <div className="col-md-2 d-flex justify-content-center align-items-center">
             <div className="bg-light rounded-3 d-flex justify-content-center align-items-center" style={{width: 70, height: 70}}>
-              {jobData.company_logo ? (
-                <Image src={jobData.company_logo} alt={jobData.company_name} width={50} height={50} className='rounded-3' />
-              ) : (
-                <div className="text-primary fw-bold">{jobData.company_name.charAt(0)}</div>
-              )}
+                <Image src={jobData.company_logo || '/Dashboards/default_company.svg'} alt={jobData.company_name} width={50} height={50} className='rounded-3' />
             </div>
           </div>
           <div className="col-md-7">
@@ -144,11 +157,11 @@ export default function ApplyJobPage() {
           </div>
           <div className={`${styles.buttonContainer} col-md-3 d-flex flex-column align-items-end gap-2`}>
             <button 
-              className="btn btn-primary px-4 mb-2" 
+              className={`btn px-4 mb-2 ${applied ? 'btn-success' : 'btn-primary'}`} 
               onClick={handleApply}
-              disabled={applying}
+              disabled={applying || applied}
             >
-              {applying ? 'Applying...' : 'Apply Now'}
+              {applying ? 'Applying...' : applied ? <><FaCheckCircle /> Applied</> : 'Apply Now'}
             </button>
             <button 
               className={`btn ${saved ? 'btn-success' : 'btn-outline-secondary'} px-4`}
