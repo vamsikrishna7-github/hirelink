@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaCheckCircle, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaCheckCircle, FaFilter, FaEye } from 'react-icons/fa';
 import styles from './My-applications.module.css';
 import Image from 'next/image';
 import { Table } from 'react-bootstrap';
@@ -10,6 +10,8 @@ import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { ClipLoader } from 'react-spinners';
 import { useRouter } from 'next/navigation';
+import Viewappliedjob from '@/components/candidate/Viewappliedjob';
+
 
 const MyApplications = () => {
   const router = useRouter();
@@ -20,6 +22,7 @@ const MyApplications = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const fetchApplications = async () => {
     try {
@@ -195,7 +198,7 @@ const MyApplications = () => {
                   </span>
                 </td>
                 <td>
-                  <button className={styles.viewButton}>View Details</button>
+                  <Viewappliedjob data={app} />
                 </td>
               </tr>
             ))}
