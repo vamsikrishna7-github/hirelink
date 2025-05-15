@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter } from 'react-icons/fa';
 import { FiBookmark } from 'react-icons/fi';
 import styles from './Jobs.module.css';
 import Image from 'next/image';
@@ -10,34 +10,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import ClipLoader from 'react-spinners/ClipLoader';
-
+import { toast } from 'react-toastify';
 
 const Jobs = () => {
-  // const jobs = [
-  //   {
-  //     company: "Microsoft",
-  //     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png",
-  //     title: "UI/UX Designer",
-  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-  //     type: ["Full Time", "Remote", "Any Level"]
-  //   },
-  //   {
-  //     company: "Canon",
-  //     logo: "https://1000logos.net/wp-content/uploads/2016/10/Canon-logo.jpg",
-  //     title: "UI/UX Designer",
-  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-  //     type: ["Full Time", "Remote", "Any Level"]
-  //   },
-  //   {
-  //     company: "Razer",
-  //     logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0CL18TsZPEpYmfVwb1_SR7ePvkCDmqrXOQ&s",
-  //     title: "UI/UX Designer",
-  //     description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-  //     type: ["Full Time", "Remote", "Any Level"]
-  //   }
-  // ];
-
-
   const [jobs, setJobs] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,7 +25,7 @@ const Jobs = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredJobs, setFilteredJobs] = useState(jobs);
-
+  const [showFilters, setShowFilters] = useState(false);
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
@@ -61,10 +36,21 @@ const Jobs = () => {
             'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         });
+        const savedJobs = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/saved-jobs/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+        const savedJobsData = await savedJobs.json();
         const data = await response.json();
+        data.forEach(job => {
+          job.isSaved = savedJobsData.some(savedJob => savedJob.job === job.id);
+        });
 
         if (!response.ok) {
           setError(data.message);
+          toast.error('Failed to fetch jobs');
           throw new Error('Failed to fetch jobs');
         }
         
@@ -82,6 +68,17 @@ const Jobs = () => {
     fetchJobs();
   }, []);
 
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFilters && !event.target.closest(`.${styles.filterSection}`)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilters]);
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -152,6 +149,40 @@ const Jobs = () => {
     applyFilters();
   }, [filters, searchQuery]);
 
+  const handleSaveJob = async (jobId) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/saved-jobs/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Cookies.get('access_token')}`
+      },
+      body: JSON.stringify({
+        job: jobId
+      })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error('Failed to save job');
+      toast.error('Failed to save job');
+    }
+    
+    // Update the isSaved state for the specific job
+    setJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, isSaved: true } : job
+    ));
+    setFilteredJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, isSaved: true } : job
+    ));
+    
+    toast.success('Job saved successfully');
+  } catch (error) {
+    console.error('Error saving job:', error);
+    toast.error('Failed to save job');
+  }
+};
+
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -202,7 +233,15 @@ const Jobs = () => {
           />
         </div>
         
-        <div className={styles.filters}>
+        <button 
+          className={styles.filtersButton}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <FaFilter className={styles.filtersButtonIcon} />
+          Filters
+        </button>
+        
+        <div className={`${styles.filters} ${showFilters ? styles.show : ''}`}>
           <div className={styles.filterItem}>
             <FaBriefcase />
             <select 
@@ -305,8 +344,10 @@ const Jobs = () => {
               </span>
             </div>
             <div className={styles.jobActions}>
-              <button className={styles.saveButton}>
-                <FiBookmark className={styles.saveIcon} /> Save
+              <button className={`${job.isSaved ? styles.saveButtonSaved : styles.saveButton}`}
+                onClick={() => handleSaveJob(job.id)}
+              >
+                <FiBookmark className={styles.saveIcon} /> {job.isSaved ? 'Saved' : 'Save'}
               </button>
               <Link href={`/dashboard/candidate/apply-job/${job.id}`}>
                 <button className={styles.applyButton}>Apply Now</button>

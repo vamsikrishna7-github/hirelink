@@ -1,153 +1,360 @@
 "use client";
 
 import React from 'react';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase } from 'react-icons/fa';
-import { FiBookmark, FiChevronDown } from 'react-icons/fi';
-import Image from 'next/image';
+import { FaSearch, FaMapMarkerAlt, FaClock, FaBriefcase, FaFilter } from 'react-icons/fa';
+import { FiBookmark } from 'react-icons/fi';
 import styles from './Find-Jobs.module.css';
-import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import ClipLoader from 'react-spinners/ClipLoader';
+
 
 const Jobs = () => {
-  const jobs = [
-    {
-      company: "Microsoft",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Amazon",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Canon",
-      logo: "https://1000logos.net/wp-content/uploads/2016/10/Canon-logo.jpg",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Netflix",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/2560px-Netflix_2015_logo.svg.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Razer",
-      logo: "https://assets.stickpng.com/images/580b57fcd9996e24bc43c51f.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
-    },
-    {
-      company: "Salesforce",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/2560px-Salesforce.com_logo.svg.png",
-      title: "UI/UX Designer",
-      description: "uis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in volu jkdnjn......",
-      type: ["Full Time", "Remote", "Any Level"]
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    experience: '',
+    location: '',
+    postedDate: '',
+    jobType: ''
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
+  const [showFilters, setShowFilters] = useState(false);
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs`,{
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+        const savedJobs = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/saved-jobs/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Cookies.get('access_token')}`
+          }
+        });
+        const savedJobsData = await savedJobs.json();
+        const data = await response.json();
+        data.forEach(job => {
+          job.isSaved = savedJobsData.some(savedJob => savedJob.job === job.id);
+        });
+
+        if (!response.ok) {
+          setError(data.message);
+          throw new Error('Failed to fetch jobs');
+        }
+        
+        console.log('Fetched jobs data:', data);
+        setJobs(data);
+        setFilteredJobs(data); // Set filtered jobs initially to all jobs
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFilters && !event.target.closest(`.${styles.filterSection}`)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilters]);
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const applyFilters = () => {
+    let result = [...jobs];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(job => 
+        job.title.toLowerCase().includes(query) ||
+        job.company_name.toLowerCase().includes(query) ||
+        job.description.toLowerCase().includes(query)
+      );
     }
-  ];
+
+    if (filters.experience) {
+      result = result.filter(job => job.experience_level === filters.experience);
+    }
+
+    if (filters.location) {
+      result = result.filter(job => job.location.toLowerCase() === filters.location.toLowerCase());
+    }
+
+    if (filters.jobType) {
+      result = result.filter(job => job.job_type === filters.jobType);
+    }
+
+    if (filters.postedDate) {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (filters.postedDate) {
+        case '24h':
+          filterDate.setHours(now.getHours() - 24);
+          break;
+        case '7d':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case '15d':
+          filterDate.setDate(now.getDate() - 15);
+          break;
+        case '30d':
+          filterDate.setDate(now.getDate() - 30);
+          break;
+        default:
+          break;
+      }
+      
+      result = result.filter(job => new Date(job.created_at) >= filterDate);
+    }
+
+    setFilteredJobs(result);
+  };
+
+  useEffect(() => {
+    console.log('Current jobs state:', jobs);
+    console.log('Current filtered jobs:', filteredJobs);
+    applyFilters();
+  }, [filters, searchQuery]);
+
+  const handleSaveJob = async (jobId) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/saved-jobs/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Cookies.get('access_token')}`
+      },
+      body: JSON.stringify({
+        job: jobId
+      })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error('Failed to save job');
+    }
+    
+    // Update the isSaved state for the specific job
+    setJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, isSaved: true } : job
+    ));
+    setFilteredJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, isSaved: true } : job
+    ));
+    
+    toast.success('Job saved successfully');
+  } catch (error) {
+    console.error('Error saving job:', error);
+    toast.error('Failed to save job');
+  }
+};
+
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <div className="text-center">
+          <ClipLoader color="#0d6efd" size={50} />
+          <p className="mt-3 text-black">Fetching content, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <h2 className="text-red-600 text-xl font-semibold mb-2">Error Loading Profile</h2>
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
-    <Container fluid className={styles.jobsContainer}>
+    <div className={styles.jobsContainer}>
       <div className={styles.filterSection}>
-        <Row className="w-100">
-          <Col xs={12} lg={11}>
-            <div className={styles.filters}>
-              <div className={styles.filterItem}>
-                <FaBriefcase />
-                <Form.Select className={styles.filterSelect} defaultValue="na">
-                  <option value="na" disabled>Experience Level</option>
-                  <option value="any">Any Level</option>
-                  <option value="entry">Entry Level</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="senior">Senior</option>
-                </Form.Select>
-                <FiChevronDown className="text-muted" />
-              </div>
+        <div className={`${styles.searchBar}`}>
+          <FaSearch className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Search jobs, companies, or keywords..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className={styles.searchInput}
+          />
+        </div>
+        
+        <button 
+          className={styles.filtersButton}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <FaFilter className={styles.filtersButtonIcon} />
+          Filters
+        </button>
+        
+        <div className={`${styles.filters} ${showFilters ? styles.show : ''}`}>
+          <div className={styles.filterItem}>
+            <FaBriefcase />
+            <select 
+              value={filters.experience}
+              onChange={(e) => handleFilterChange('experience', e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="" disabled>Experience Level</option>
+              <option value="entry">Entry Level</option>
+              <option value="mid">Mid Level</option>
+              <option value="senior">Senior Level</option>
+              <option value="executive">Executive Level</option>
+            </select>
+          </div>
 
-              <div className={styles.filterItem}>
-                <FaMapMarkerAlt />
-                <Form.Select className={styles.filterSelect} defaultValue="na">
-                  <option value="na" disabled>Location</option>
-                  <option value="remote">Remote</option>
-                  <option value="onsite">On Site</option>
-                  <option value="hybrid">Hybrid</option>
-                </Form.Select>
-                <FiChevronDown className="text-muted" />
-              </div>
+          <div className={styles.filterItem}>
+            <FaMapMarkerAlt />
+            <select 
+              value={filters.location}
+              onChange={(e) => handleFilterChange('location', e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="" disabled>Location</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="New York">New York</option>
+            </select>
+          </div>
 
-              <div className={styles.filterItem}>
-                <FaClock />
-                <Form.Select className={styles.filterSelect} defaultValue="na">
-                  <option value="na" disabled>Posted Date</option>
-                  <option value="24h">Last 24 Hours</option>
-                  <option value="7d">Last 7 Days</option>
-                  <option value="30d">Last 30 Days</option>
-                </Form.Select>
-                <FiChevronDown className="text-muted" />
-              </div>
+          <div className={styles.filterItem}>
+            <FaClock />
+            <select 
+              value={filters.postedDate}
+              onChange={(e) => handleFilterChange('postedDate', e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="" disabled>Posted Date</option>
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="15d">Last 15 Days</option>
+              <option value="30d">Last 30 Days</option>
+            </select>
+          </div>
 
-              <div className={styles.filterItem}>
-                <FaBriefcase />
-                <Form.Select className={styles.filterSelect} defaultValue="na">
-                  <option value="na" disabled>Job Type</option>
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="contract">Contract</option>
-                  <option value="internship">Internship</option>
-                </Form.Select>
-                <FiChevronDown className="text-muted" />
-              </div>
-            </div>
-          </Col>
-          <Col xs={12} lg={1} className="d-flex align-items-center justify-content-end">
-            <Button className={styles.searchButton}>
-              <FaSearch />
-            </Button>
-          </Col>
-        </Row>
+          <div className={styles.filterItem}>
+            <FaBriefcase />
+            <select 
+              value={filters.jobType}
+              onChange={(e) => handleFilterChange('jobType', e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="" disabled>Job Type</option>
+              <option value="full-time">Full Time</option>
+              <option value="part-time">Part Time</option>
+              <option value="contract">Contract</option>
+              <option value="internship">Internship</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className={styles.jobsGrid}>
-        {jobs.map((job, index) => (
-          <Card key={index} className={styles.jobCard}>
-            <Card.Body>
-              <div className={styles.jobHeader}>
-                <div className={styles.companyLogo}>
-                  <Image
-                    src={job.logo}
-                    alt={`${job.company} logo`}
-                    width={40}
-                    height={40}
-                  />
-                </div>
-                <div className={styles.jobTitle}>
-                  <h4>{job.title}</h4>
-                  <p>{job.company}</p>
-                </div>
+        {filteredJobs.map((job) => (
+          <div key={job.id} className={styles.jobCard}>
+            <div className={styles.jobHeader}>
+              <div className={styles.companyLogo}>
+                <Image
+                  src={job.company_logo || '/Dashboards/default_company.svg'}
+                  alt={`${job.company_name} logo`}
+                  width={60}
+                  height={60}
+                  className={styles.logoImage}
+                  onError={(e) => {
+                    e.target.src = '/Dashboards/default_company.svg';
+                  }}
+                />
               </div>
-              <p className={styles.jobDescription}>{job.description}</p>
-              <div className={styles.jobTags}>
-                {job.type.map((tag, idx) => (
-                  <span key={idx} className={styles.tag}>{tag}</span>
-                ))}
+              <div className={styles.jobTitle}>
+                <h4 className={styles.title}>{job.title}</h4>
+                <p className={styles.companyName}>{job.company_name}</p>
+                <p className={styles.location}>
+                  <FaMapMarkerAlt className={styles.locationIcon} />
+                  {job.location}
+                </p>
               </div>
-              <div className={styles.jobActions}>
-                <Button variant="outline-primary" className={styles.saveButton}> <FiBookmark /> Save</Button>
-                <Link href="/dashboard/candidate/apply-job"><Button variant="primary" className={styles.applyButton}>Apply Now</Button></Link>
-              </div>
-            </Card.Body>
-          </Card>
+            </div>
+            <p className={styles.jobDescription}>
+              {job.description?.length > 150 
+                ? `${job.description.substring(0, 150)}...` 
+                : job.description}
+            </p>
+            <div className={styles.jobTags}>
+              <span className={styles.tag}>{job.job_type}</span>
+              <span className={styles.tag}>{job.experience_level}</span>
+              <span className={styles.tag}>{job.work_mode}</span>
+              <span className={styles.tag}>
+                <FaClock className={styles.tagIcon} />
+                {formatDate(job.created_at)}
+              </span>
+            </div>
+            <div className={styles.jobActions}>
+              <button className={`${job.isSaved ? styles.saveButtonSaved : styles.saveButton}`}
+                onClick={() => handleSaveJob(job.id)}
+              >
+                <FiBookmark className={styles.saveIcon} /> {job.isSaved ? 'Saved' : 'Save'}
+              </button>
+              <Link href={`/dashboard/candidate/apply-job/${job.id}`}>
+                <button className={styles.applyButton}>Apply Now</button>
+              </Link>
+            </div>
+          </div>
         ))}
       </div>
-    </Container>
+    </div>
   );
 };
 

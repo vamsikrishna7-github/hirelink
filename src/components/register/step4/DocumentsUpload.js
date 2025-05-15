@@ -231,7 +231,7 @@ const DocumentsUpload = () => {
         )}
         <div className={styles.buttonRow}>
           <button 
-            className={styles.backBtn} 
+            className={`${styles.backBtn} d-none `} 
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
