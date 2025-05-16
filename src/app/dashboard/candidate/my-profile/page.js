@@ -1046,7 +1046,7 @@ export default function Profile() {
         ) : (
         <div className={styles.skillsContainer}>
           {profileData.profile.skills ? (
-            profileData.profile.skills.split(' ').map((skill, index) => (
+            profileData.profile.skills.split(',').map((skill, index) => (
               <span key={index} className={styles.skillBadge}>
                 {skill}
               </span>
