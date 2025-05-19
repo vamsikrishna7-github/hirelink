@@ -1,390 +1,158 @@
-"use client";
+'use client';
+import { FiMail, FiBell, FiMapPin } from 'react-icons/fi';
+import { MdMessage } from 'react-icons/md';
+import { HiOutlineMail, HiOutlineUserCircle } from 'react-icons/hi';
+import styles from './page.module.css';
+import SemiCircleChart from '@/components/consultancy/SemiCrircleChart';
+import Image from 'next/image';
+import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
+import { ClipLoader } from 'react-spinners';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { 
-  FaBriefcase, 
-  FaUsers, 
-  FaChartLine, 
-  FaBell, 
-  FaUserCircle,
-  FaPlus,
-  FaSearch,
-  FaFilter,
-  FaHandshake,
-  FaFileAlt
-} from 'react-icons/fa';
-import LogoutButton from '@/app/components/LogoutButton';
 
-export default function ConsultancyDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
+async function getUser() {
+  try{
+  const user = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get/profile/`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Cookies.get('access_token')}`
+      }
+    }
+  );
+  const data = await user.json();
+  return data;
+} catch (error) {
+  console.error('Error fetching user:', error);
+  toast.error('Failed to fetch user profile');
+  return null;
+}
+}
+
+export default function EmployerDashboard() {
+  const [user, setUser] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await getUser();
+        userData.stats = {
+          messages: 0,
+          notifications: 0,
+          applications: 0
+        };
+        setUser(userData);
+        setLoading(false);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <div className="text-center">
+          <ClipLoader color="#0d6efd" size={50} />
+          <p className="mt-3 text-black">Fetching content, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <h2 className="text-red-600 text-xl font-semibold mb-2">Error Loading Profile</h2>
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Top Navigation Bar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div className="container-fluid">
-          <Link href="/dashboard/consultancy" className="navbar-brand fw-bold">Consultancy Dashboard</Link>
-          <div className="d-flex align-items-center">
-            <button className="btn btn-link me-3">
-              <FaBell size={20} />
-            </button>
-            <div className="dropdown">
-              <button className="btn btn-link dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
-                <FaUserCircle size={24} />
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li><Link className="dropdown-item" href="/profile">Profile</Link></li>
-                <li><Link className="dropdown-item" href="/settings">Settings</Link></li>
-                <li><hr className="dropdown-divider" /></li>
-                <li>
-                  <LogoutButton />
-                </li>
-              </ul>
+    <div className={styles.dashboard}>
+      {/* Header Section */}
+      <header className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="h4 mb-0 fw-bold">Dashboard</h1>
+        <div className="d-flex gap-3">
+          <button className="btn btn-light position-relative p-2">
+            <HiOutlineMail size={24} />
+            {user.stats.messages > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {user.stats.messages}
+              </span>
+            )}
+          </button>
+          <button className="btn btn-light position-relative p-2">
+            <FiBell size={22} />
+            {user.stats.notifications > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {user.stats.notifications}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Welcome Card */}
+      <div className="card shadow-sm mb-4">
+        <div className="container-fluid card-body">
+          <div className="row justify-content-between align-items-center">
+            {/* Left Column - User Info (will take available space) */}
+            <div className="col-md-auto mb-3 mb-md-0">
+              <h2 className="h5 card-title">Welcome back, {user?.user?.name}!</h2>
+              <p className="card-text text-muted mb-2">{user?.profile?.specialization}</p>
+              <div className="d-flex align-items-center gap-2">
+                <FiMail size={16} className="text-muted" />
+                <small className="text-muted">{user?.user?.email}</small>
+              </div>
+            </div>
+            
+            {/* Right Column - Profile Image (fixed width, aligned to end) */}
+            <div className={`col-md-auto ${styles.profile}`}>
+              <div className="d-flex flex-column align-items-center">
+                <Image 
+                  width={80} 
+                  height={80} 
+                  src={user?.profile?.profile_image || 'https://www.svgrepo.com/show/530589/company.svg'} 
+                  alt={user?.profile?.consultancy_name} 
+                  className="rounded-circle object-fit-cover border"
+                  style={{ width: '80px', height: '80px' }}
+                />
+                <div className="mt-2 text-center">
+                  <p className="mb-0 fw-medium">{user?.profile?.consultancy_name}</p>
+                  <small className="text-muted">
+                    <FiMapPin size={14} className="me-1" />
+                    {(user?.profile?.office_address)?.substring(0, 10)}...
+                  </small>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
 
-      <div className="dashboard-page">
-        <div className="container-fluid">
-          <div className="row">
-            {/* Sidebar */}
-            <div className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-              <div className="position-sticky pt-3">
-                <ul className="nav flex-column">
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('overview')}
-                    >
-                      <FaChartLine className="me-2" />
-                      Overview
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'projects' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('projects')}
-                    >
-                      <FaBriefcase className="me-2" />
-                      Projects
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'candidates' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('candidates')}
-                    >
-                      <FaUsers className="me-2" />
-                      Candidates
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'clients' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('clients')}
-                    >
-                      <FaHandshake className="me-2" />
-                      Clients
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-              {/* Overview Tab */}
-              {activeTab === 'overview' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Dashboard Overview</h1>
-                  </div>
-
-                  {/* Stats Cards */}
-                  <div className="row">
-                    <div className="col-md-3 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Active Projects</h5>
-                          <h2 className="card-text">8</h2>
-                          <p className="text-success">+2 from last month</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Active Candidates</h5>
-                          <h2 className="card-text">45</h2>
-                          <p className="text-success">+10% from last month</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Active Clients</h5>
-                          <h2 className="card-text">12</h2>
-                          <p className="text-success">+3 from last quarter</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card">
-                        <div className="card-body">
-                          <h5 className="card-title">Revenue</h5>
-                          <h2 className="card-text">$45K</h2>
-                          <p className="text-success">+15% from last month</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recent Activity */}
-                  <div className="card mt-4">
-                    <div className="card-header">
-                      <h5 className="mb-0">Recent Activity</h5>
-                    </div>
-                    <div className="card-body">
-                      <ul className="list-group list-group-flush">
-                        <li className="list-group-item">New project request from TechCorp</li>
-                        <li className="list-group-item">Candidate John Doe completed technical assessment</li>
-                        <li className="list-group-item">New client onboarding scheduled for tomorrow</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Projects Tab */}
-              {activeTab === 'projects' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Projects</h1>
-                    <button className="btn btn-primary">
-                      <FaPlus className="me-2" />
-                      New Project
-                    </button>
-                  </div>
-
-                  {/* Search and Filter */}
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaSearch />
-                        </span>
-                        <input type="text" className="form-control" placeholder="Search projects..." />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaFilter />
-                        </span>
-                        <select className="form-select">
-                          <option>All Status</option>
-                          <option>Active</option>
-                          <option>Completed</option>
-                          <option>On Hold</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Projects List */}
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Project Name</th>
-                          <th>Client</th>
-                          <th>Start Date</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Tech Team Expansion</td>
-                          <td>TechCorp</td>
-                          <td>2024-03-01</td>
-                          <td><span className="badge bg-success">Active</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-secondary">Edit</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>HR System Implementation</td>
-                          <td>Global Inc</td>
-                          <td>2024-02-15</td>
-                          <td><span className="badge bg-warning">In Progress</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-secondary">Edit</button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Candidates Tab */}
-              {activeTab === 'candidates' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Candidates</h1>
-                    <button className="btn btn-primary">
-                      <FaPlus className="me-2" />
-                      Add Candidate
-                    </button>
-                  </div>
-
-                  {/* Search and Filter */}
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaSearch />
-                        </span>
-                        <input type="text" className="form-control" placeholder="Search candidates..." />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaFilter />
-                        </span>
-                        <select className="form-select">
-                          <option>All Status</option>
-                          <option>Available</option>
-                          <option>Placed</option>
-                          <option>In Process</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Candidates List */}
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Skills</th>
-                          <th>Status</th>
-                          <th>Last Updated</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>John Doe</td>
-                          <td>React, Node.js, AWS</td>
-                          <td><span className="badge bg-success">Available</span></td>
-                          <td>2024-03-16</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-success">Assign to Project</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Jane Smith</td>
-                          <td>Python, Data Science, ML</td>
-                          <td><span className="badge bg-info">In Process</span></td>
-                          <td>2024-03-14</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-success">Assign to Project</button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Clients Tab */}
-              {activeTab === 'clients' && (
-                <div>
-                  <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 className="h2">Clients</h1>
-                    <button className="btn btn-primary">
-                      <FaPlus className="me-2" />
-                      Add Client
-                    </button>
-                  </div>
-
-                  {/* Search and Filter */}
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaSearch />
-                        </span>
-                        <input type="text" className="form-control" placeholder="Search clients..." />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <FaFilter />
-                        </span>
-                        <select className="form-select">
-                          <option>All Clients</option>
-                          <option>Active</option>
-                          <option>Inactive</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Clients List */}
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Company Name</th>
-                          <th>Contact Person</th>
-                          <th>Projects</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>TechCorp</td>
-                          <td>Sarah Johnson</td>
-                          <td>3 Active</td>
-                          <td><span className="badge bg-success">Active</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-secondary">Edit</button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Global Inc</td>
-                          <td>Michael Brown</td>
-                          <td>2 Active</td>
-                          <td><span className="badge bg-success">Active</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button className="btn btn-sm btn-outline-secondary">Edit</button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </main>
-          </div>
+      {/* Chart Section */}
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <SemiCircleChart />
         </div>
       </div>
     </div>
   );
-} 
+}
