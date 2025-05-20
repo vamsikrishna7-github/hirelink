@@ -13,8 +13,6 @@ import { toast } from 'react-toastify';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { useRouter } from 'next/navigation';
 
-
-
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Dashboard() {
@@ -52,36 +50,54 @@ export default function Dashboard() {
         throw new Error('Failed to fetch applications data');
       }
 
-      const allJobs = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Cookies.get('access_token')}`
-        }
-      });
-
-      if (!allJobs.ok) {
-        throw new Error('Failed to fetch all jobs data');
-      }
-
       const userData = await userResponse.json();
-      const applicationsData = await applicationsResponse.json();
-      const allJobsData = await allJobs.json();
-
-      applicationsData.forEach(application => {
-        const job = allJobsData.find(job => job.id === application.job);
-        if (recentJobs.length < 4 && !recentJobs.some(j => j.job.id === job.id)) {
-          recentJobs.push({
-            job: job,
-            app: application
-          });
+      const appData = await applicationsResponse.json();
+      const applicationsData = [];
+      appData.forEach(function(application, index) {
+        if(index+1 <= 4 ){
+          applicationsData.push(application);
+        }
+        else{
+          return;
         }
       });
 
-      console.log(recentJobs);
+      // Fetch job details for all applications at once
+      const jobsWithApplications = await Promise.all(
+        applicationsData.map(async (application) => {
+          const jobResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${application?.job}/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Cookies.get('access_token')}`
+            }
+          });
+          const jobData = await jobResponse.json();
+          return { job: jobData, app: application };
+        })
+      );
+
+      // Remove duplicates by job ID
+      const uniqueJobs = jobsWithApplications.reduce((acc, current) => {
+        const x = acc.find(item => item.job.id === current.job.id);
+        if (!x) {
+          return acc.concat([current]);
+        } else {
+          return acc;
+        }
+      }, []);
+
+      // Sort by most recent first
+      const sortedJobs = uniqueJobs.sort((a, b) => 
+        new Date(b.app.created_at) - new Date(a.app.created_at)
+      );
+
+      // Get only the 5 most recent jobs
+      const mostRecentJobs = sortedJobs.slice(0, 5);
 
       setUserData(userData);
       setMyapplications(applicationsData);
+      setRecentJobs(mostRecentJobs);
       
     } catch (error) {
       toast.error(error.message);
@@ -97,19 +113,20 @@ export default function Dashboard() {
   // Calculate stats from actual data
   const getStats = () => {
     const applied = myapplications.length;
-    const rejected = myapplications.filter(app => app.status === 'rejected').length;
-    const pending = myapplications.filter(app => app.status === 'pending').length;
-    const scheduled = myapplications.filter(app => app.status === 'scheduled').length;
+    const rejected = myapplications.filter(app => app?.status === 'rejected').length;
+    const pending = myapplications.filter(app => app?.status === 'pending').length;
+    const scheduled = myapplications.filter(app => app?.status === 'scheduled').length;
 
     // Get unique companies for the "Applied Jobs" stat
-    const uniqueCompanies = [...new Set(recentJobs.map(app => app.job.company_logo))];
-    const sampleCompanies = uniqueCompanies.slice(0, 3).map(company => {
-      const app = recentJobs.find(a => a.job.company_logo === company);
+    const uniqueCompanies = [...new Set(myapplications.map(app => app?.job))];
+    const sampleCompanies = uniqueCompanies?.slice(0, 3).map(jobId => {
+      const app = myapplications.find(a => a?.job === jobId);
+      const job = recentJobs.find(j => j.job.id === jobId)?.job;
       return {
-        name: app?.job.company_name || 'Unknown Company',
-        logo: app?.job.company_logo || '/Dashboards/default_company.svg'
+        name: job?.company_name || 'Unknown Company',
+        logo: job?.company_logo || '/Dashboards/default_company.svg'
       };
-    });
+    }).filter(company => company); // Filter out undefined entries
 
     return [
       { 
@@ -148,6 +165,7 @@ export default function Dashboard() {
     ];
   };
 
+  // Rest of your component remains the same...
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -250,13 +268,13 @@ export default function Dashboard() {
                 <h3>{stat.value}</h3>
               </div>
               <p>{stat.label}</p>
-              {stat.companies && (
+              {stat?.companies && (
                 <div className={styles.companyLogos}>
                   {stat.companies.map((company, i) => (
-                    <div key={i} className={styles.companyLogoWrapper} title={company.name}>
+                    <div key={i} className={styles.companyLogoWrapper} title={company?.name}>
                       <Image
-                        src={company.logo}
-                        alt={company.name}
+                        src={company?.logo}
+                        alt={company?.name}
                         width={24}
                         height={24}
                         className={styles.companyLogo}
@@ -287,7 +305,7 @@ export default function Dashboard() {
             <Card.Body>
               <h5 className="mb-3">Recently Applied</h5>
               <div className={styles.recentTable}>
-                {recentJobs.map((item, i) => (
+                {recentJobs?.map((item, i) => (
                   <motion.div
                     key={i}
                     className={`${styles.recentRow} d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3`}
@@ -298,30 +316,30 @@ export default function Dashboard() {
                     <div className="d-flex align-items-center gap-2 flex-grow-1">
                       <div className={styles.companyLogoWrapper}>
                         <Image
-                          src={item.job.company_logo || '/Dashboards/default_company.svg'}
-                          alt={item.job.company_name}
+                          src={item?.job?.company_logo || '/Dashboards/default_company.svg'}
+                          alt={item?.job?.company_name}
                           width={32}
                           height={32}
                           className={styles.companyLogo}
                         />
                       </div>
                       <div>
-                        <h6 className="mb-0">{item.job.company_name}</h6>
-                        <small className="text-muted">{item.job.title}</small>
+                        <h6 className="mb-0">{item?.job?.company_name}</h6>
+                        <small className="text-muted">{item?.job?.title}</small>
                       </div>
                     </div>
                     <div className="text-end">
-                      <small className="text-muted d-block me-2 mb-1">{dateFormatter(item.job.updated_at)}</small>
+                      <small className="text-muted d-block me-2 mb-1">{dateFormatter(item?.app?.created_at)}</small>
                       <span
                         className={
-                          item.app.status === "rejected"
+                          item?.app?.status === "rejected"
                             ? styles.rejected
-                            : item.app.status === "pending"
+                            : item?.app?.status === "pending"
                             ? styles.pending
                             : styles.scheduled
                         }
                       >
-                        {item.app.status}
+                        {item?.app?.status}
                       </span>
                     </div>
                   </motion.div>
