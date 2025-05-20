@@ -1,94 +1,154 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Bids.module.css";
-import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown, FiPhone } from "react-icons/fi";
+import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown, FiPhone, FiUsers } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
-
-const initialApplications = [
-  {
-    id: "01",
-    name: "Vamsi",
-    position: "Senior Frontend Developer",
-    date: "2024-03-15",
-    status: "Pending",
-    level: "Junior"
-  },
-  {
-    id: "02",
-    name: "Sukumar",
-    position: "UI/UX Designer",
-    date: "2024-02-15",
-    status: "Pending",
-    level: "Mid"
-  },
-  {
-    id: "03",
-    name: "Kiran",
-    position: "Backend Developer",
-    date: "2024-01-15",
-    status: "Rejected",
-    level: "Junior"
-  },
-  {
-    id: "04",
-    name: "Hema",
-    position: "Software Engineer",
-    date: "2024-01-25",
-    status: "Shortlisted",
-    level: "Senior"
-  },
-  {
-    id: "05",
-    name: "Kavya",
-    position: "Full Stack Developer",
-    date: "2024-02-10",
-    status: "Pending",
-    level: "Senior"
-  },
-  {
-    id: "06",
-    name: "Sai",
-    position: "React Developer",
-    date: "2024-03-18",
-    status: "Shortlisted",
-    level: "Mid"
-  },
-];
+import Cookies from "js-cookie";
+import Image from "next/image";
+import ReceivedBidsActionbtn from "@/components/employer/models/received-bids/ReceivedBidsActionbtn";
 
 export default function PostedJobsPage() {
-  const [applications, setApplications] = useState(initialApplications);
+  const [bids, setBids] = useState([]);
+  const [jobs, setJobs] = useState({}); // Store job details by job ID
+  const [consultancies, setConsultancies] = useState({}); // Store consultancy details by consultancy ID
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [levelFilter, setLevelFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const applicationsPerPage = 5;
+  const bidsPerPage = 5;
 
-  // Filter jobs based on search and filters
-  const filteredApplications = applications.filter(application => {
-    const matchesSearch = application.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || application.status === statusFilter;
-    const matchesLevel = levelFilter === "All" || application.level === levelFilter;
-    return matchesSearch && matchesStatus && matchesLevel;
+  useEffect(() => {
+    const fetchBids = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/`,
+          {
+            headers: {
+              'Authorization': `Bearer ${Cookies.get('access_token')}`
+            }
+          }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch bids');
+        }
+        const data = await response.json();
+        setBids(data);
+        
+        // Fetch job details for each unique job ID
+        const jobIds = [...new Set(data.map(bid => bid.job))];
+        const consultancyIds = [...new Set(data.map(bid => bid.consultancy))];
+        const jobDetails = {};
+        const consultancyDetails = {};
+        
+        // Fetch job details
+        for (const jobId of jobIds) {
+          const jobResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${jobId}/`,
+            {
+              headers: {
+                'Authorization': `Bearer ${Cookies.get('access_token')}`
+              }
+            }
+          );
+          if (jobResponse.ok) {
+            const jobData = await jobResponse.json();
+            jobDetails[jobId] = jobData;
+          }
+        }
+
+        // Fetch consultancy details
+        for (const consultancyId of consultancyIds) {
+          const consultancyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/consultancy-profile/${consultancyId}/`,
+            {
+              headers: {
+                'Authorization': `Bearer ${Cookies.get('access_token')}`
+              }
+            }
+          );
+          if (consultancyResponse.ok) {
+            const consultancyData = await consultancyResponse.json();
+            consultancyDetails[consultancyId] = consultancyData;
+          }
+        }
+        
+        setJobs(jobDetails);
+        setConsultancies(consultancyDetails);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchBids();
+  }, []);
+
+  // Filter bids based on search and filters
+  const filteredBids = bids.filter(bid => {
+    const job = jobs[bid.job] || {};
+    const consultancy = consultancies[bid.consultancy] || {};
+    const matchesSearch = 
+      job.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      job.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consultancy.consultancy_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "All" || bid.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   // Pagination logic
-  const indexOfLastApplication = currentPage * applicationsPerPage;
-  const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage;
-  const currentApplications = filteredApplications.slice(indexOfFirstApplication, indexOfLastApplication);
-  const totalPages = Math.ceil(filteredApplications.length / applicationsPerPage);
+  const indexOfLastBid = currentPage * bidsPerPage;
+  const indexOfFirstBid = indexOfLastBid - bidsPerPage;
+  const currentBids = filteredBids.slice(indexOfFirstBid, indexOfLastBid);
+  const totalPages = Math.ceil(filteredBids.length / bidsPerPage);
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
   };
 
-  const handleLevelFilter = (level) => {
-    setLevelFilter(level);
-    setCurrentPage(1);
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className={`container-fluid min-vh-100 bg-transparent ${styles.wrapper}`}>
+        <div className="row justify-content-center pt-2">
+          <div className="p-0">
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`container-fluid min-vh-100 bg-transparent ${styles.wrapper}`}>
+        <div className="row justify-content-center pt-2">
+          <div className="p-0">
+            <div className="alert alert-danger">{error}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`container-fluid min-vh-100 bg-transparent${styles.wrapper}`}>
+    <div className={`container-fluid min-vh-100 bg-transparent ${styles.wrapper}`}>
       <div className="row justify-content-center pt-2">
         <div className="p-0">
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -102,7 +162,7 @@ export default function PostedJobsPage() {
           <div className={`${styles.card} card border-0 shadow-sm mb-4`}>
             <div className="card-body p-3">
               <div className="row g-3">
-                <div className="col-md-6">
+                <div className="col-md-8">
                   <div className="input-group">
                     <span className="input-group-text bg-white border-end-0">
                       <FiSearch className="text-muted" />
@@ -110,13 +170,13 @@ export default function PostedJobsPage() {
                     <input
                       type="text"
                       className="form-control border-start-0 ps-0"
-                      placeholder="Search applicants..."
+                      placeholder="Search by job title, company or consultancy..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="col-md-3">
+                <div className="col-md-4">
                   <div className="dropdown">
                     <button 
                       className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
@@ -131,30 +191,9 @@ export default function PostedJobsPage() {
                     </button>
                     <ul className="dropdown-menu w-100">
                       <li><button className="dropdown-item" onClick={() => handleStatusFilter("All")}>All Status</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("Shortlisted")}>Shortlisted</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("Pending")}>Pending</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("Rejected")}>Rejected</button></li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="dropdown">
-                    <button 
-                      className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
-                      type="button" 
-                      data-bs-toggle="dropdown"
-                    >
-                      <span>
-                        <BiFilterAlt className="me-2" />
-                        {levelFilter === "All" ? "Level" : levelFilter}
-                      </span>
-                      <FiChevronDown className="text-muted" />
-                    </button>
-                    <ul className="dropdown-menu w-100">
-                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("All")}>All Levels</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Junior")}>Junior</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Mid")}>Mid</button></li>
-                      <li><button className="dropdown-item" onClick={() => handleLevelFilter("Senior")}>Senior</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("shortlisted")}>Shortlisted</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("pending")}>Pending</button></li>
+                      <li><button className="dropdown-item" onClick={() => handleStatusFilter("rejected")}>Rejected</button></li>
                     </ul>
                   </div>
                 </div>
@@ -162,82 +201,81 @@ export default function PostedJobsPage() {
             </div>
           </div>
 
-          {/* Jobs Table */}
+          {/* Bids Table */}
           <div className={`${styles.card} card border-0 shadow-sm bg-transparent rounded-3`}>
-            <div className="table-responsivet border-0 bg-transparent">
+            <div className="table-responsive border-0 bg-transparent">
               <table className={`${styles.table} table table-hover mb-0 bg-transparent table-striped`}>
                 <thead className="bg-transparent fw-bold">
                   <tr>
-                    <th className="ps-4">ID</th>
-                    <th>Candidates</th>
-                    <th>Level</th>
-                    <th>Positions</th>
-                    <th>Bid date</th>
+                    <th className="ps-4">Bid ID</th>
+                    <th>Job Title</th>
+                    <th>Consultancy</th>
+                    <th>Proposal</th>
+                    <th>Fee</th>
+                    <th>Submitted On</th>
                     <th>Status</th>
                     <th className="text-end pe-4">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {currentApplications.length > 0 ? (
-                    currentApplications.map((app) => (
-                      <tr key={app.id}>
-                        <td className="ps-4 fw-semibold">{app.id}</td>
-                        <td>
-                          <div className="d-flex flex-column">
-                            <span className="fw-semibold">{app.name}</span>
-                            <small className="text-muted">#{app.id}</small>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`badge ${
-                            app.level === "Junior" ? "bg-info" :
-                            app.level === "Mid" ? "bg-primary" : "bg-warning"
-                          }`}>
-                            {app.level}
-                          </span>
-                        </td>
-                        <td>
-                          <span>
-                            {app.position}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-semibold">{app.date}</span>
-                        </td>
-                        <td>
-                          <span className={`badge rounded-pill ${
-                            app.status === "Shortlisted" 
-                              ? "bg-success bg-opacity-10 text-success" 
-                              : app.status === "Pending"
-                                ? "bg-warning bg-opacity-10 text-warning"
-                                : "bg-danger bg-opacity-10 text-danger"
-                          }`}>
-                            {app.status}
-                          </span>
-                        </td>
-                        <td className="text-end pe-4">
-                          <div className="d-flex justify-content-end gap-2">
-                            <button 
-                              className={`btn btn-sm btn-outline-secondary d-flex align-items-center ${styles["btn-modern"]}`}
-                              title="Call"
-                            >
-                              <FiPhone size={16} />
-                            </button>
-                            <button 
-                              className={`btn btn-sm btn-primary d-flex align-items-center ${styles["btn-modern"]}`}
-                              title="View"
-                            >
-                              <FiEye size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                  {currentBids.length > 0 ? (
+                    currentBids.map((bid, index) => {
+                      const job = jobs[bid.job] || {};
+                      const consultancy = consultancies[bid.consultancy] || {};
+                      return (
+                        <tr key={bid.id}>
+                          <td className="ps-4 fw-semibold">{index + 1}</td>
+                          <td>
+                            <div className="d-flex flex-column">
+                              <span className="fw-semibold">{job.title || 'N/A'}</span>
+                              <small className="text-muted">{job.work_mode} • {job.job_type} • {job.experience_level} • {job.location}</small>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="d-flex flex-column">
+                              <span className="fw-semibold"><Image src={consultancy.profile_image || 'https://www.svgrepo.com/show/530589/company.svg'} alt={consultancy.consultancy_name} width={20} height={20} className="rounded-circle me-1"/> {consultancy.consultancy_name || 'N/A'}</span>
+                              <small className="text-muted"><FiUsers/> {consultancy.consultancy_size} • {consultancy.specialization}</small>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="fw-semibold">{(bid.proposal).substring(0, 25)}...</span>
+                          </td>
+                          <td>
+                            <span className="fw-semibold">{formatCurrency(bid.fee)}</span>
+                          </td>
+                          <td>
+                            <span className="text-muted">{formatDate(bid.created_at)}</span>
+                          </td>
+                          <td>
+                            <span className={`badge rounded-pill ${
+                              bid.status === "approved" 
+                                ? "bg-success bg-opacity-10 text-success" 
+                                : bid.status === "rejected"
+                                  ? "bg-danger bg-opacity-10 text-danger"
+                                  : "bg-warning bg-opacity-10 text-warning"
+                            }`}>
+                              {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="text-end pe-4">
+                            <div className="d-flex justify-content-end gap-2">
+                              <ReceivedBidsActionbtn data={{
+                                ...bid,
+                                job: jobs[bid.job] || {},
+                                consultancy: consultancies[bid.consultancy] || {}
+                              }} />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center py-4 text-muted">
-                        No bids found matching your criteria
+                      <td colSpan="8" className="text-center py-4 text-muted">
+                        {searchTerm || statusFilter !== "All" ? 
+                          "No bids found matching your criteria" : 
+                          "No bids received yet"}
                       </td>
                     </tr>
                   )}
@@ -246,10 +284,10 @@ export default function PostedJobsPage() {
             </div>
 
             {/* Pagination */}
-            {filteredApplications.length > applicationsPerPage && (
+            {filteredBids.length > bidsPerPage && (
               <div className="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
                 <small className="text-muted">
-                  Showing {indexOfFirstApplication + 1}-{Math.min(indexOfLastApplication, filteredApplications.length)} of {filteredApplications.length} applications
+                  Showing {indexOfFirstBid + 1}-{Math.min(indexOfLastBid, filteredBids.length)} of {filteredBids.length} bids
                 </small>
                 <nav>
                   <ul className="pagination mb-0">
