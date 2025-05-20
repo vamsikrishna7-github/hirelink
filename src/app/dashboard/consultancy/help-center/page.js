@@ -1,72 +1,45 @@
-'use client';
-import styles from './Help-center.module.css';
-import { useState } from 'react';
+import React from 'react'
+import Help from '@/components/help-center/Help'
 
-export default function HelpCenter() {
-  const [openQuestion, setOpenQuestion] = useState(null);
-
+const page = () => {
   const faqData = [
     {
       id: 1,
-      question: "What is Pixel Bloom",
-      answer: "Pixel Bloom is a cutting-edge digital platform that combines innovative technology with creative solutions. We specialize in providing comprehensive digital services tailored to modern business needs."
+      question: "How do I create a new consultancy profile?",
+      answer: "Go to your dashboard and click on 'Create Profile'. Fill in your consultancy details including company name, services offered, expertise areas, and contact information. Upload your company logo and any relevant certifications."
     },
     {
       id: 2,
-      question: "How can I benefit from Pixel Bloom's services?",
-      answer: "Our AI models can enhance your business operations by automating tasks, improving accuracy, and providing data-driven insights."
+      question: "How can I manage client projects?",
+      answer: "Access the 'Projects' section in your dashboard to view and manage all client projects. You can track project status, update milestones, communicate with clients, and manage deliverables from this central location."
     },
     {
       id: 3,
-      question: "How do I get started with Pixel Bloom?",
-      answer: "Getting started is simple! Sign up for an account, choose your preferred service package, and our team will guide you through the onboarding process. We provide comprehensive support to ensure a smooth start."
+      question: "How do I submit proposals for jobs?",
+      answer: "Browse available jobs in the 'Job Board' section. When you find a suitable opportunity, click 'Submit Proposal' and provide your approach, timeline, and pricing. You can also attach relevant case studies or portfolio items."
     },
     {
       id: 4,
-      question: "Are your AI models customizable?",
-      answer: "Yes, our AI models are fully customizable to meet your specific business needs. We work closely with clients to ensure the solutions align perfectly with their requirements."
+      question: "How can I track my consultancy's performance?",
+      answer: "Use the 'Analytics' dashboard to monitor key metrics like project completion rate, client satisfaction scores, revenue, and growth. You can generate reports and export data for detailed analysis."
     },
     {
       id: 5,
-      question: "How is data privacy handled?",
-      answer: "We take data privacy very seriously. All data is encrypted, stored securely, and handled in compliance with global privacy standards. We implement strict security measures to protect your information."
+      question: "How do I manage my team members?",
+      answer: "Go to 'Team Management' in your dashboard settings. Here you can add team members, assign roles and permissions, track their workload, and manage their access to different projects and features."
+    },
+    {
+      id: 6,
+      question: "How can I handle client communications?",
+      answer: "Use the built-in messaging system in your dashboard to communicate with clients. You can send messages, share files, schedule meetings, and maintain a record of all communications in one place."
     }
   ];
-
-  const toggleQuestion = (id) => {
-    setOpenQuestion(openQuestion === id ? null : id);
-  };
-
+  
   return (
-    <div className="container py-5">
-      <div className={styles.helpCenterHeader}>
-        <h1>Frequently Asked</h1>
-        <h1 className={styles.questionsText}>Questions</h1>
-        <p className="text-muted mt-4">Still have a questions in mind?</p>
-        <button className={`${styles.contactButton} mt-3`}>
-          Contact Us
-        </button>
-      </div>
-
-      <div className={styles.faqContainer}>
-        {faqData.map((faq) => (
-          <div 
-            key={faq.id} 
-            className={`${styles.faqItem} ${openQuestion === faq.id ? styles.active : ''}`}
-            onClick={() => toggleQuestion(faq.id)}
-          >
-            <div className={styles.faqHeader}>
-              <h3>{faq.question}</h3>
-              <span className={styles.toggleIcon}>
-                {openQuestion === faq.id ? '−' : '+'}
-              </span>
-            </div>
-            <div className={`${styles.faqAnswer} ${openQuestion === faq.id ? styles.show : ''}`}>
-              <p>{faq.answer}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div>
+      <Help queys={faqData} />
     </div>
-  );
-} 
+  )
+}
+
+export default page

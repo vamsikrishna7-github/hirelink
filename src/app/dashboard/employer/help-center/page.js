@@ -1,72 +1,45 @@
-'use client';
-import styles from './Help-center.module.css';
-import { useState } from 'react';
+import React from 'react'
+import Help from '@/components/help-center/Help'
 
-export default function HelpCenter() {
-  const [openQuestion, setOpenQuestion] = useState(null);
-
+const page = () => {
   const faqData = [
     {
       id: 1,
-      question: "What is Pixel Bloom",
-      answer: "Pixel Bloom is a cutting-edge digital platform that combines innovative technology with creative solutions. We specialize in providing comprehensive digital services tailored to modern business needs."
+      question: "How do I post a new job?",
+      answer: "To post a new job, go to your dashboard and click on 'Post a Job'. Fill in the job details including title, description, requirements, and location. You can also set the job type, salary range, and application deadline."
     },
     {
       id: 2,
-      question: "How can I benefit from Pixel Bloom's services?",
-      answer: "Our AI models can enhance your business operations by automating tasks, improving accuracy, and providing data-driven insights."
+      question: "How can I manage job applications?",
+      answer: "You can manage all applications in the 'Applications' section of your dashboard. Here you can view candidate profiles, review applications, schedule interviews, and update application statuses."
     },
     {
       id: 3,
-      question: "How do I get started with Pixel Bloom?",
-      answer: "Getting started is simple! Sign up for an account, choose your preferred service package, and our team will guide you through the onboarding process. We provide comprehensive support to ensure a smooth start."
+      question: "How do I edit or delete a job posting?",
+      answer: "Go to the 'Posted Jobs' section, find the job you want to modify, and click on the edit or delete button. For editing, you can update any job details. For deletion, you'll be asked to confirm before the job is removed."
     },
     {
       id: 4,
-      question: "Are your AI models customizable?",
-      answer: "Yes, our AI models are fully customizable to meet your specific business needs. We work closely with clients to ensure the solutions align perfectly with their requirements."
+      question: "How do I schedule interviews with candidates?",
+      answer: "When viewing a candidate's application, click on 'Schedule Interview'. You can choose the date, time, and interview type (in-person, video call, or phone). The candidate will receive a notification with the interview details."
     },
     {
       id: 5,
-      question: "How is data privacy handled?",
-      answer: "We take data privacy very seriously. All data is encrypted, stored securely, and handled in compliance with global privacy standards. We implement strict security measures to protect your information."
+      question: "How can I search for candidates?",
+      answer: "Use the 'Search Candidates' feature in your dashboard. You can filter candidates by skills, experience, location, and other criteria. You can also save promising candidates to your shortlist for future reference."
+    },
+    {
+      id: 6,
+      question: "How do I manage my company profile?",
+      answer: "Go to 'Company Profile' in your dashboard settings. Here you can update your company information, logo, description, and other details. A complete profile helps attract better candidates."
     }
   ];
-
-  const toggleQuestion = (id) => {
-    setOpenQuestion(openQuestion === id ? null : id);
-  };
-
+  
   return (
-    <div className="container py-5">
-      <div className={styles.helpCenterHeader}>
-        <h1>Frequently Asked</h1>
-        <h1 className={styles.questionsText}>Questions</h1>
-        <p className="text-muted mt-4">Still have a questions in mind?</p>
-        <button className={`${styles.contactButton} mt-3`}>
-          Contact Us
-        </button>
-      </div>
-
-      <div className={styles.faqContainer}>
-        {faqData.map((faq) => (
-          <div 
-            key={faq.id} 
-            className={`${styles.faqItem} ${openQuestion === faq.id ? styles.active : ''}`}
-            onClick={() => toggleQuestion(faq.id)}
-          >
-            <div className={styles.faqHeader}>
-              <h3>{faq.question}</h3>
-              <span className={styles.toggleIcon}>
-                {openQuestion === faq.id ? '−' : '+'}
-              </span>
-            </div>
-            <div className={`${styles.faqAnswer} ${openQuestion === faq.id ? styles.show : ''}`}>
-              <p>{faq.answer}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div>
+      <Help queys={faqData} />
     </div>
-  );
-} 
+  )
+}
+
+export default page
