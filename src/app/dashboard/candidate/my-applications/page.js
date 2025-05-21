@@ -224,8 +224,10 @@ const MyApplications = () => {
                             {app?.application?.status}
                           </span>
                         </td>
-                        <td className="text-end pe-4">
-                          <Viewappliedjob data={app} />
+                        <td>
+                          <div className="float-end">
+                            <Viewappliedjob data={app} />
+                          </div>
                         </td>
                       </tr>
                     ))

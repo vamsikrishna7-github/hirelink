@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
 import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaTrash, FaEdit } from "react-icons/fa";
@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
+import { PostedJobsContext } from "@/context/employer/Postedjobs";
+
+
 
 // Custom modal styles
 const customStyles = {
@@ -40,6 +43,7 @@ const customStyles = {
 };
 
 export default function PostedJobActions({ data }) {
+  const { jobs, setJobs } = useContext(PostedJobsContext);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isBrowser, setIsBrowser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,8 +126,10 @@ export default function PostedJobActions({ data }) {
       }
 
       toast.success('Job updated successfully');
+      console.log('jobs CONTEXT:', jobs);
+      setJobs(jobs.map(job => job.id === data.id ? { ...job, ...formData } : job));
       setIsEditing(false);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error('Error updating job:', error);
       toast.error('Failed to update job. Please try again.');

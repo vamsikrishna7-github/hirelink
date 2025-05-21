@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./page.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FiHome, FiBriefcase, FiBookmark, FiSearch, FiFileText, FiUser, FiSettings, FiHelpCircle, FiLogOut, FiCheckCircle, FiXCircle, FiClock, FiCalendar, FiUsers } from 'react-icons/fi';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -10,17 +10,20 @@ import DashboardSidebar from "@/components/employer/DashboardSidebar";
 import { usePathname } from "next/navigation";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 import Cookies from 'js-cookie';
+import { ApplicationsProvider } from "@/context/employer/Applications";
+import { PostedJobsProvider } from "@/context/employer/Postedjobs";
+import { ReceivedBidsProvider } from "@/context/employer/Receivedbids";
+import { ProfileContext } from "@/context/shared/Profile";
+
+
 ChartJS.register(ArcElement, Tooltip, Legend);
+
+
 
 export default function DashboardLayout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [profileData, setProfileData] = useState({
-    user: {},
-    profile: {},
-    education: [],
-    experience: []
-  });
+  const { profileData, setProfileData } = useContext(ProfileContext);
 
   useEffect(() => {
     // for css import
@@ -110,9 +113,15 @@ export default function DashboardLayout({ children }) {
         )}
       </AnimatePresence>
 
-      <div className={`${styles.container}`}>
-        {children}
-      </div>
+      <ApplicationsProvider>
+        <PostedJobsProvider>
+          <ReceivedBidsProvider>
+            <div className={`${styles.container}`}>
+              {children}
+            </div>
+          </ReceivedBidsProvider>
+        </PostedJobsProvider>
+      </ApplicationsProvider>
 
       
     </div>

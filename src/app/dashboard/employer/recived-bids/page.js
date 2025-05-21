@@ -1,14 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./Bids.module.css";
 import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown, FiPhone, FiUsers } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import ReceivedBidsActionbtn from "@/components/employer/models/received-bids/ReceivedBidsActionbtn";
+import { ReceivedBidsContext } from "@/context/employer/Receivedbids";
 
 export default function PostedJobsPage() {
-  const [bids, setBids] = useState([]);
+  const { bids, setBids } = useContext(ReceivedBidsContext);
   const [jobs, setJobs] = useState({}); // Store job details by job ID
   const [consultancies, setConsultancies] = useState({}); // Store consultancy details by consultancy ID
   const [loading, setLoading] = useState(true);

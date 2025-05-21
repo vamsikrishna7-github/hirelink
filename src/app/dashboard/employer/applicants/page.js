@@ -1,13 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import styles from "./Posted-jobs.module.css";
 import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown, FiPhone, FiMail } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
-import { useEffect } from "react";
 import Link from "next/link";
 import ApplicationsAction from "@/components/employer/models/applications/ApplicationsActionbtn";
+import { ApplicationsContext } from "@/context/employer/Applications";
 
 async function getApplications() {
   try {
@@ -79,7 +79,7 @@ async function getApplications() {
 }
 
 export default function PostedJobsPage() {
-  const [applications, setApplications] = useState([]);
+  const {applications, setApplications} = useContext(ApplicationsContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("All");

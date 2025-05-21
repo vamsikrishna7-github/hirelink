@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Modal from "react-modal";
 import styles from "./ApplicationsActionbtn.module.css";
 import { FaEye, FaTimes, FaDownload, FaChevronDown, FaChevronUp, FaUser, FaGraduationCap, FaBriefcase, FaCode } from "react-icons/fa";
@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 import { toast } from 'react-toastify';
 import Image from "next/image";
+import { ApplicationsContext } from "@/context/employer/Applications";
 
 // Custom modal styles
 const customStyles = {
@@ -67,6 +68,7 @@ const itemVariants = {
 };
 
 export default function ApplicationsAction({ data }) {
+  const { applications, setApplications } = useContext(ApplicationsContext);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isBrowser, setIsBrowser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +103,9 @@ export default function ApplicationsAction({ data }) {
       }
 
       setStatus(newStatus);
-      toast.success('Application status updated successfully');
+      toast.success(`Application status updated to ${newStatus}`);
+      console.log('applications CONTEXT:', applications);
+      setApplications(applications.map(app => app.id === data.id ? { ...app, status: newStatus } : app));
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status. Please try again.');

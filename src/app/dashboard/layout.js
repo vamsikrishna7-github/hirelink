@@ -4,6 +4,7 @@ import BootstrapClient from '../BootstrapClient';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { TicketProvider } from '@/context/help-center/Ticket';
+import { ProfileProvider } from '@/context/shared/Profile';
 
 export const metadata = {
   title: "HireLink Dashboard",
@@ -13,10 +14,12 @@ export const metadata = {
 export default function DashboardLayout({ children }) {
   return (
     <TicketProvider>
-      <div className="dashboard-layout">
-        {children}
-        <ToastContainer position="top-right" autoClose={3000} theme="colored" />
-      </div>
+      <ProfileProvider>
+        <div className="dashboard-layout">
+          {children}
+          <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+        </div>
+      </ProfileProvider>
     </TicketProvider>
   );
 }

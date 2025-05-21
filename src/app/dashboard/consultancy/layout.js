@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./page.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FiHome, FiUser, FiSettings, FiHelpCircle, FiLogOut} from 'react-icons/fi';
 import { FaGavel, FaClipboardList, FaBriefcase } from 'react-icons/fa';
@@ -11,17 +11,14 @@ import DashboardSidebar from "@/components/consultancy/DashboardSidebar";
 import { usePathname } from "next/navigation";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 import Cookies from 'js-cookie';
+import { ProfileContext } from "@/context/shared/Profile";
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function DashboardLayout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [profileData, setProfileData] = useState({
-    user: {},
-    profile: {},
-    education: [],
-    experience: []
-  });
+  const { profileData, setProfileData } = useContext(ProfileContext);
 
   useEffect(() => {
     // for css import

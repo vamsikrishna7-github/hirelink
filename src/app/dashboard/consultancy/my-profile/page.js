@@ -1,12 +1,12 @@
 'use client';
 import styles from './Profile.module.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Image from 'next/image';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
-
+import { ProfileContext } from '@/context/shared/Profile';
 import { 
   FaBuilding, 
   FaGlobe, 
@@ -27,12 +27,7 @@ import {
 
 export default function Profile() {
   const router = useRouter();
-  const [profileData, setProfileData] = useState({
-    user: {},
-    profile: {},
-    education: [],
-    experience: []
-  });
+  const { profileData, setProfileData } = useContext(ProfileContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./Posted-jobs.module.css";
 import { FiSearch, FiPlus, FiEdit2, FiEye, FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
@@ -8,6 +8,7 @@ import { ClipLoader } from "react-spinners";
 import Link from "next/link";
 import PostedjobActionbtn from "@/components/employer/models/PostedjobActionbtn";
 import { toast } from 'react-toastify';
+import { PostedJobsContext } from "@/context/employer/Postedjobs";
 
 
 async function getJobs() {
@@ -32,7 +33,7 @@ async function getJobs() {
 }
 
 export default function PostedJobsPage() {
-  const [jobs, setJobs] = useState([]);
+  const { jobs, setJobs } = useContext(PostedJobsContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("All");
@@ -220,7 +221,7 @@ export default function PostedJobsPage() {
                     currentJobs.map((job, index) => (
                       (job?.posted_by?.email === Cookies.get('email') && (
                         <tr key={job.id}>
-                          <td className="ps-4 fw-semibold">{index + 1}</td>
+                          <td className="ps-4 fw-semibold">{index }</td>
                         <td>
                           <div className="d-flex flex-column">
                             <span className="fw-semibold">{job.title}</span>
