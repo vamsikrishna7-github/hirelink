@@ -91,7 +91,7 @@ export default function PostedJobsPage() {
   // Filter jobs based on search and filters
   const filteredApplications = applications.filter(application => {
     const matchesSearch = application.candidate.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         application.job.title.toLowerCase().includes(searchTerm.toLowerCase());
+    application.job.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "All" || application.status === statusFilter.toLowerCase();
     const matchesLevel = levelFilter === "All" || application.job.experience_level === levelFilter.toLowerCase();
     return matchesSearch && matchesStatus && matchesLevel;
@@ -252,7 +252,7 @@ export default function PostedJobsPage() {
                   {currentApplications.length > 0 ? (
                     currentApplications.map((app, index) => (
                       <tr key={app.id}>
-                        <td className="ps-4 fw-semibold">{index + 1}</td>
+                        <td className="ps-4 fw-semibold">#{app.id}</td>
                         <td>
                           <div className="d-flex flex-column">
                             <span className="fw-semibold">{app.candidate.user.name}</span>

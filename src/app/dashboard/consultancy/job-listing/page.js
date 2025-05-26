@@ -169,7 +169,7 @@ export default function PostedJobsPage() {
                     />
                   </div>
                 </div>
-                <div className="col-md-2">
+                <div className="col">
                   <div className="dropdown">
                     <button 
                       className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
@@ -189,7 +189,7 @@ export default function PostedJobsPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="col-md-2">
+                <div className="col">
                   <div className="dropdown">
                     <button 
                       className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
@@ -216,7 +216,7 @@ export default function PostedJobsPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="col-md-2">
+                <div className="col">
                   <div className="dropdown">
                     <button 
                       className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
@@ -239,7 +239,7 @@ export default function PostedJobsPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="col-md-2">
+                <div className="col">
                   <div className="dropdown">
                     <button 
                       className="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
@@ -259,6 +259,20 @@ export default function PostedJobsPage() {
                       <li><button className="dropdown-item" onClick={() => handleModeFilter("onsite")}>On-site</button></li>
                     </ul>
                   </div>
+                </div>
+                <div className="col">
+                  <button 
+                  className={`${styles.btn} btn btn-outline-secondary`} 
+                  disabled={statusFilter === "All" && levelFilter === "All" && typeFilter === "All" && modeFilter === "All"}
+                  onClick={() => {
+                    setStatusFilter("All");
+                    setLevelFilter("All");
+                    setTypeFilter("All");
+                    setModeFilter("All");
+                    setSearchTerm("");
+                  }}>
+                    Reset Filters
+                  </button>
                 </div>
               </div>
             </div>

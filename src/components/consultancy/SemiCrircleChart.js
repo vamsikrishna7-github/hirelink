@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
+import Link from 'next/link';
+
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -155,6 +157,7 @@ const ConsultancyBidAnalytics = () => {
         </div>
 
         <div className="col">
+          <Link className="text-decoration-none text-black" href="/dashboard/consultancy/your-bids">
           <ul className="list-unstyled">
             <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-warning bg-opacity-10">
               <span className="fw-semibold"> <FaHourglassHalf /> Pending</span>
@@ -192,6 +195,7 @@ const ConsultancyBidAnalytics = () => {
               </span>
             </li>
           </ul>
+          </Link>
         </div>
       </div>
     </div>

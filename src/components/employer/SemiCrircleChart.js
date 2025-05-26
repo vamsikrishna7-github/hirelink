@@ -7,6 +7,11 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
+import Link from 'next/link';
+import styles from './SemiCrircleChart.module.css';
+
+
+
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -152,41 +157,43 @@ const ApplicantDistributionChart = () => {
 
         <div className="col">
           <ul className="list-unstyled">
-            <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded">
+            <Link className="text-decoration-none text-black" href="/dashboard/employer/applicants">
+            <li className={`${styles.li} mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded`}>
               <span className="fw-semibold"> <FaCalendarCheck /> Interview</span>
               <span className="d-flex align-items-center">
                 {stats.interview}
                 <FaPlay className="ms-2" size={14} />
               </span>
             </li>
-            <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-warning bg-opacity-10">
+            <li className={`${styles.li} mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-warning bg-opacity-10`}>
               <span className="fw-semibold"> <FaCheckCircle /> Shortlisted</span>
               <span className="d-flex align-items-center">
                 {stats.shortlisted}
                 <FaPlay className="ms-2" size={14} />
               </span>
             </li>
-            <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-danger bg-opacity-10">
+            <li className={`${styles.li} mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-danger bg-opacity-10`}>
               <span className="fw-semibold"> <FaTimesCircle /> Rejected</span>
               <span className="d-flex align-items-center">
                 {stats.rejected}
                 <FaPlay className="ms-2" size={14} />
               </span>
             </li>
-            <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-info bg-opacity-10">
+            <li className={`${styles.li} mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-info bg-opacity-10`}>
               <span className="fw-semibold"> <FaHourglassHalf /> Applied</span>
               <span className="d-flex align-items-center">
                 {stats.applied}
                 <FaPlay className="ms-2" size={14} />
               </span>
             </li>
-            <li className="mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-secondary bg-opacity-10">
+            <li className={`${styles.li} mb-3 d-flex justify-content-between align-items-center py-2 px-3 border rounded bg-secondary bg-opacity-10`}>
               <span className="fw-semibold"> <FaUsers /> Total Applications</span>
               <span className="d-flex align-items-center">
                 {totalApplications}
                 <FaPlay className="ms-2" size={14} />
               </span>
             </li>
+            </Link>
           </ul>
         </div>
       </div>

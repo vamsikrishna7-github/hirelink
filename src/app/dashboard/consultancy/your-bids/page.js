@@ -212,6 +212,17 @@ export default function YourBidsPage() {
                     </ul>
                   </div>
                 </div>
+                <div className="col-md-3">
+                  <button 
+                  className={`${styles.btn} btn btn-outline-secondary`} 
+                  disabled={statusFilter === "All"}
+                  onClick={() => {
+                    setStatusFilter("All");
+                    setSearchTerm("");
+                  }}>
+                    Reset Filters
+                  </button>
+                </div>
               </div>
             </div>
           </div>

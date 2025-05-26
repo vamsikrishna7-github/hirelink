@@ -11,9 +11,11 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
+import { City } from 'country-state-city';
 
 
 const Jobs = () => {
+  const [selectLocation, setSelectLocation] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,6 +30,12 @@ const Jobs = () => {
   const [filteredJobs, setFilteredJobs] = useState(jobs);
   const [showFilters, setShowFilters] = useState(false);
   useEffect(() => {
+
+    const indianCities = City.getCitiesOfCountry("IN");
+    const locations = indianCities.map(city => city.name);
+    const uniqueLocations = [...new Set(locations)];
+    setSelectLocation(uniqueLocations);
+
     const fetchJobs = async () => {
       setLoading(true);
       try {
@@ -248,8 +256,7 @@ const Jobs = () => {
           className={styles.filtersButton}
           onClick={() => setShowFilters(!showFilters)}
         >
-          <FaFilter className={styles.filtersButtonIcon} />
-          Filters
+          <FaFilter className={styles.filtersButtonIcon} /> Filters
         </button>
         
         <div className={`${styles.filters} ${showFilters ? styles.show : ''}`}>
@@ -276,9 +283,9 @@ const Jobs = () => {
               className={styles.filterSelect}
             >
               <option value="" disabled>Location</option>
-              <option value="Chennai">Chennai</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="New York">New York</option>
+              {selectLocation.map((location) => (
+                <option key={location} value={location}>{location}</option>
+              ))}
             </select>
           </div>
 
@@ -312,6 +319,13 @@ const Jobs = () => {
               <option value="remote">Remote</option>
             </select>
           </div>
+
+          <button className={`${styles.resetButton} btn btn-primary`} onClick={() => setFilters({
+            experience: '',
+            location: '',
+            postedDate: '',
+            jobType: ''
+          })}>Reset Filters</button>
         </div>
       </div>
 

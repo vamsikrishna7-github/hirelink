@@ -9,8 +9,13 @@ import Link from 'next/link';
 import Cookies from 'js-cookie';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
+import { City } from 'country-state-city';
+
+
+
 
 const SavedJobs = () => {
+  const [selectLocation, setSelectLocation] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [rawSavedJobs, setRawSavedJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +28,14 @@ const SavedJobs = () => {
     jobType: ''
   });
 
+
+
   useEffect(() => {
+    const indianCities = City.getCitiesOfCountry("IN");
+    const locations = indianCities.map(city => city.name);
+    const uniqueLocations = [...new Set(locations)];
+    setSelectLocation(uniqueLocations);
+
     fetchSavedJobs();
   }, []);
 
@@ -177,9 +189,9 @@ const SavedJobs = () => {
               className={styles.filterSelect}
             >
               <option value="" disabled>Location</option>
-              <option value="Chennai">Chennai</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="New York">New York</option>
+              {selectLocation.map((location) => (
+                <option key={location} value={location}>{location}</option>
+              ))}
             </select>
           </div>
 
@@ -213,6 +225,12 @@ const SavedJobs = () => {
               <option value="remote">Remote</option>
             </select>
           </div>
+          <button className={`${styles.resetButton} btn btn-primary`} onClick={() => setFilters({
+            experience: '',
+            location: '',
+            postedDate: '',
+            jobType: ''
+          })}>Reset Filters</button>
         </div>
       </div>
 

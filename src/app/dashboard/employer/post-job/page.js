@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
-
+import { Country, State, City } from "country-state-city";
+import { BiCity } from 'react-icons/bi';
+import { FaCity, FaGlobeAmericas } from 'react-icons/fa';
 
 export default function PostJob() {
   const router = useRouter();
@@ -21,14 +23,14 @@ export default function PostJob() {
     company_website: '',
     company_email: '',
     company_logo: '',
-    location: 'Chennai',
+    location: '',
     work_mode: 'hybrid',
     job_type: 'full-time',
     experience_level: 'senior',
     industry: 'Technology',
     min_salary: '',
     max_salary: '',
-    currency: 'USD',
+    currency: 'INR',
     salary_type: 'yearly',
     description: '',
     requirements: '',
@@ -37,6 +39,13 @@ export default function PostJob() {
     deadline: '',
     vacancies: 1
   });
+
+  const [states, setStates] = useState([]);
+const [cities, setCities] = useState([]);
+
+useEffect(() => {
+  setStates(State.getStatesOfCountry('IN'));
+}, []);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -101,6 +110,25 @@ export default function PostJob() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (parseInt(formData.min_salary) > parseInt(formData.max_salary)) {
+      toast.error('Minimum salary cannot be greater than maximum salary');
+      return;
+    }else if(parseInt(formData.min_salary) < 0 || parseInt(formData.max_salary) < 0){
+      toast.error('Salary cannot be negative');
+      return;
+    }else if(formData.min_salary === '' || formData.max_salary === ''){
+      toast.error('Salary cannot be empty');
+      return;
+    }else if(parseInt(formData.min_salary) === 0 || parseInt(formData.max_salary) === 0){
+      toast.error('Salary cannot be zero');
+      return;
+    }else if(formData.min_salary === null || formData.max_salary === null){
+      toast.error('Salary cannot be null');
+      return;
+    }else if(formData.min_salary === undefined || formData.max_salary === undefined){
+      toast.error('Salary cannot be undefined');
+      return;
+    }
     setIsSubmitting(true);
     setError('');
     
@@ -138,6 +166,24 @@ export default function PostJob() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+
+  const handleStateChange = (e) => {
+    const selectedState = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      location: "", // clear city when state changes
+      state: selectedState,
+    }));
+    setCities(City.getCitiesOfState('IN', selectedState));
+  };
+  
+  const handleCityChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      location: e.target.value,
+    }));
   };
 
   return (
@@ -224,38 +270,51 @@ export default function PostJob() {
               </div>
             </div>
 
-            <div className="row gx-3">
-              <div className="col-md-6 mb-4">
-                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                  <FiMapPin /> Location
-                </label>
-                <input 
-                  type="text" 
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className={`${styles.input} form-control`} 
-                  placeholder="New York, NY" 
-                  required
-                />
-              </div>
-              <div className="col-md-6 mb-4">
-                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                  <FiClock /> Work Mode
-                </label>
-                <select 
-                  name="work_mode"
-                  value={formData.work_mode}
-                  onChange={handleChange}
-                  className={`${styles.input} form-select`}
-                  required
-                >
-                  <option value="remote">Remote</option>
-                  <option value="hybrid">Hybrid</option>
-                  <option value="onsite">On-site</option>
-                </select>
+            <div className="col mb-4">
+              <div className="row">
+                  <div className="col">
+                    <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                      <FaGlobeAmericas /> State
+                    </label>
+                    <select
+                    className={`${styles.input} form-select`}
+                    value={formData.state || ""}
+                    onChange={handleStateChange}
+                    required
+                    >
+                    <option value="">Select State</option>
+                    {states.map((state) => (
+                      <option key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </option>
+                    ))}
+                    </select>
+                  </div>
+
+
+                  <div className="col">
+                      <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                        <FaCity /> City
+                      </label>
+                    <select
+                      className={`${styles.input} form-select`}
+                      value={formData.location || ""}
+                      onChange={handleCityChange}
+                      required
+                      disabled={!formData.state}
+                    >
+                      <option value="">Select City</option>
+                      {cities.map((city) => (
+                        <option key={city.name} value={city.name}>
+                          {city.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
               </div>
             </div>
+
 
             <div className="row gx-3">
               <div className="col-md-6 mb-4">
@@ -334,7 +393,7 @@ export default function PostJob() {
             <div className="row gx-3">
               <div className="col-md-6 mb-4">
                 <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
-                  <FiDollarSign /> Salary Range
+                ₹ Salary Range
                 </label>
                 <div className="d-flex gap-2">
                   <input 
