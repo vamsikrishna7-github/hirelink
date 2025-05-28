@@ -205,6 +205,14 @@ export default function PostedJobActions({ data }) {
     }
   };
 
+  const getFeePercentage = () => {
+    const fee = parseFloat(data.fee);
+    if (isNaN(fee) || !data.job?.min_salary || !data.job?.max_salary) return null;
+    const avgSalary = (parseFloat(data.job.min_salary) + parseFloat(data.job.max_salary)) / 2;
+    if (avgSalary === 0) return null;
+    return ((fee / avgSalary) * 100).toFixed(2);
+  };
+
   if (!isBrowser) return null;
 
   return (
@@ -217,7 +225,7 @@ export default function PostedJobActions({ data }) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <FaGavel size={16} />
+          <FiEye size={16} />
         </motion.button>
       </div>
 
@@ -345,7 +353,12 @@ export default function PostedJobActions({ data }) {
                       </div>
                     </div>
                     <div className={styles.infoRow}>
-                      <p><strong>Fee:</strong> ₹{data.fee}</p>
+                      <p className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+                        <strong>Fee:</strong> <strong className="text-primary" >₹{data.fee}</strong><br/>
+                        {getFeePercentage() !== null && (
+                          <><strong className="text-primary">{getFeePercentage()}%</strong> of average salary range</>
+                        )}
+                      </p>
                       <p><strong>Submitted On:</strong> {new Date(data.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>

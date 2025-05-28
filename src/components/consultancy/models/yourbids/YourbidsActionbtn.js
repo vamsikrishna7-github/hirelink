@@ -246,6 +246,14 @@ export default function BidAction({ data, onBidUpdate }) {
     }
   };
 
+  const getFeePercentage = (fee) => {
+    const feeValue = parseFloat(fee);
+    if (isNaN(feeValue) || !jobDetails?.min_salary || !jobDetails?.max_salary) return null;
+    const avgSalary = (parseFloat(jobDetails.min_salary) + parseFloat(jobDetails.max_salary)) / 2;
+    if (avgSalary === 0) return null;
+    return ((feeValue / avgSalary) * 100).toFixed(2);
+  };
+
   if (!isBrowser) return null;
 
   return (
@@ -349,6 +357,7 @@ export default function BidAction({ data, onBidUpdate }) {
                     onSubmit={handleEditSubmit}
                     variants={itemVariants}
                   >
+                    
                     <div className={styles.formGroup}>
                       <label htmlFor="fee">Proposed Fee ($)</label>
                       <input
@@ -362,6 +371,11 @@ export default function BidAction({ data, onBidUpdate }) {
                         step="0.01"
                         className={styles.formInput}
                       />
+                      {editForm.fee && jobDetails && getFeePercentage(editForm.fee) !== null && (
+                        <div className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+                          Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(editForm.fee)}%</strong> of the average salary range ({jobDetails.min_salary} - {jobDetails.max_salary} {jobDetails.currency})
+                        </div>
+                      )}
                     </div>
                     <div className={styles.formGroup}>
                       <label htmlFor="proposal">Proposal</label>
@@ -442,6 +456,11 @@ export default function BidAction({ data, onBidUpdate }) {
                             currency: 'USD'
                           })}
                         </p>
+                        {jobDetails && getFeePercentage(data.fee) !== null && (
+                          <p className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+                            Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(data.fee)}%</strong> of the average salary range ({jobDetails.min_salary} - {jobDetails.max_salary} {jobDetails.currency})
+                          </p>
+                        )}
                       </div>
 
                       <details className={styles.details}>

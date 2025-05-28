@@ -212,7 +212,7 @@ export default function PostedJobsPage() {
                     <th>Job Title</th>
                     <th>Consultancy</th>
                     <th>Proposal</th>
-                    <th>Fee</th>
+                    <th>Fee with percentage %</th>
                     <th>Submitted On</th>
                     <th>Status</th>
                     <th className="text-end pe-4">Actions</th>
@@ -243,7 +243,24 @@ export default function PostedJobsPage() {
                             <span className="fw-semibold">{(bid.proposal).substring(0, 25)}...</span>
                           </td>
                           <td>
-                            <span className="fw-semibold">{formatCurrency(bid.fee)}</span>
+                            <div className="d-flex flex-column">
+                              <span className="fw-semibold">{formatCurrency(bid.fee)}</span>
+                              {job && (() => {
+                                const fee = parseFloat(bid.fee);
+                                const minSalary = parseFloat(job.min_salary);
+                                const maxSalary = parseFloat(job.max_salary);
+                                if (!isNaN(fee) && !isNaN(minSalary) && !isNaN(maxSalary)) {
+                                  const avgSalary = (minSalary + maxSalary) / 2;
+                                  const percentage = ((fee / avgSalary) * 100).toFixed(2);
+                                  return (
+                                    <small className="text-muted">
+                                      <strong className="text-primary">{percentage}%</strong> of avg. salary
+                                    </small>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
                           </td>
                           <td>
                             <span className="text-muted">{formatDate(bid.created_at)}</span>

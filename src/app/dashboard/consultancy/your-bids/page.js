@@ -236,7 +236,7 @@ export default function YourBidsPage() {
                     <th className="ps-4">S.No</th>
                     <th>Job Title</th>
                     <th>Proposal</th>
-                    <th>Fee</th>
+                    <th>Fee with percentage %</th>
                     <th>Status</th>
                     <th>Submitted On</th>
                     <th className="text-end pe-4">Actions</th>
@@ -274,10 +274,27 @@ export default function YourBidsPage() {
                             </span>
                           </td>
                           <td>
-                            <span className="fw-semibold">
-                              <FiDollarSign className="me-1" />
-                              {parseFloat(bid.fee).toLocaleString()}
-                            </span>
+                            <div className="d-flex flex-column">
+                              <span className="fw-semibold">
+                                <FiDollarSign className="me-1" />
+                                {parseFloat(bid.fee).toLocaleString()}
+                              </span>
+                              {jobs[bid.job] && (() => {
+                                const fee = parseFloat(bid.fee);
+                                const minSalary = parseFloat(jobs[bid.job].min_salary);
+                                const maxSalary = parseFloat(jobs[bid.job].max_salary);
+                                if (!isNaN(fee) && !isNaN(minSalary) && !isNaN(maxSalary)) {
+                                  const avgSalary = (minSalary + maxSalary) / 2;
+                                  const percentage = ((fee / avgSalary) * 100).toFixed(2);
+                                  return (
+                                    <small className="text-muted">
+                                      <strong className="text-primary">{percentage}%</strong> of avg. salary
+                                    </small>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
                           </td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(bid.status)}`}>

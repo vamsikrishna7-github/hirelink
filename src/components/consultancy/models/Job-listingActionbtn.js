@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
-import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel } from "react-icons/fa";
+import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel, FaPercent } from "react-icons/fa";
 import { FiEye } from "react-icons/fi";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -68,6 +68,14 @@ export default function PostedJobActions({ data }) {
       ...prev,
       [name]: value
     }));
+  };
+
+  const getFeePercentage = () => {
+    const fee = parseFloat(bidData.fee);
+    if (isNaN(fee) || !data.min_salary || !data.max_salary) return null;
+    const avgSalary = (parseFloat(data.min_salary) + parseFloat(data.max_salary)) / 2;
+    if (avgSalary === 0) return null;
+    return ((fee / avgSalary) * 100).toFixed(2);
   };
 
   const handleBidSubmit = async (e) => {
@@ -256,6 +264,11 @@ export default function PostedJobActions({ data }) {
                       step="1"
                       placeholder="Enter your fee amount"
                     />
+                    {bidData.fee && getFeePercentage() !== null && (
+                      <div className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+                        Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage()}%</strong> of the average salary range ({data.min_salary} - {data.max_salary} {data.currency})
+                      </div>
+                    )}
                   </div>
 
                   <div className={styles.formActions}>

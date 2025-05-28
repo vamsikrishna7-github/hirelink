@@ -11,18 +11,6 @@ import { ClipLoader } from 'react-spinners';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-// const user = {
-//   name: 'John Doe',
-//   email: 'john.doe@example.com',
-//   profilePicture: 'https://img.icons8.com/color/480/google-logo.png',
-//   location: 'New York, NY',
-//   bio: 'Software engineer passionate about building scalable systems.',
-//   stats: {
-//     applications: 24,
-//     messages: 5,
-//     notifications: 3
-//   }
-// };
 
 
 async function getUser() {

@@ -1,22 +1,35 @@
 "use client";
 
-import React from 'react';
-import styles from './Settings.module.css';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   FiSettings, FiLock, FiFile, FiEdit2, FiUser, FiEye, 
-  FiShield, FiKey, FiTrash2, FiFileText, FiHelpCircle 
+  FiShield, FiKey, FiTrash2, FiFileText, FiHelpCircle,
+  FiBell, FiMail, FiGlobe, FiCreditCard
 } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import ChangePasswd from './changepasswd/ChangePasswd';
+import DeleteAccountModal from './deleteaccount/DeleteAccountModel';
+import EmailPreferencesModal from './emailpreferences/EmailPreferencesModal';
 
-const SettingsLayout = ({ userType }) => {
+
+
+const SettingsLayout = ({ userType='employer' }) => {
+  const router = useRouter();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+  const [isEmailPreferencesModalOpen, setIsEmailPreferencesModalOpen] = useState(false);
+
   const settingsSections = [
     {
       title: "Account Settings",
       icon: FiSettings,
       items: [
-        { icon: FiEdit2, label: "Edit Profile", onClick: () => {} },
-        { icon: FiUser, label: "Change Profile Picture", onClick: () => {} },
-        { icon: FiEye, label: "Appearance", onClick: () => {} },
+        { icon: FiEdit2, label: "Edit Profile", onClick: () => {router.push('/dashboard/'+userType+'/my-profile')}},
+        { icon: FiUser, label: "Change Profile Picture", onClick: () => {router.push('/dashboard/'+userType+'/my-profile')}},
+        { icon: FiEye, label: "Appearance", onClick: () => {router.push('/dashboard/'+userType+'/my-profile')}},
+        { icon: FiBell, label: "Notifications", onClick: () => {router.push('/dashboard/'+userType+'/my-profile')}},
+        { icon: FiMail, label: "Email Preferences", onClick: () => setIsEmailPreferencesModalOpen(true) },
       ]
     },
     {
@@ -24,29 +37,54 @@ const SettingsLayout = ({ userType }) => {
       icon: FiLock,
       items: [
         { icon: FiShield, label: "Two-Factor Authentication", onClick: () => {} },
-        { icon: FiKey, label: "Modify Password", onClick: () => {} },
-        { icon: FiTrash2, label: "Delete Account", onClick: () => {}, isDanger: true },
+        { icon: FiKey, label: "Modify Password", onClick: () => setIsPasswordModalOpen(true) },
+        { icon: FiGlobe, label: "Privacy Settings", onClick: () => {} },
+        { icon: FiTrash2, label: "Delete Account", onClick: () => setIsDeleteAccountModalOpen(true), isDanger: true },
+      ]
+    },
+    {
+      title: "Billing & Subscription",
+      icon: FiCreditCard,
+      items: [
+        { icon: FiCreditCard, label: "Payment Methods", onClick: () => {} },
+        { icon: FiFileText, label: "Billing History", onClick: () => {} },
+        { icon: FiSettings, label: "Subscription Plan", onClick: () => {} },
       ]
     },
     {
       title: "Legal",
       icon: FiFile,
       items: [
-        { icon: FiFileText, label: "Terms and Conditions", onClick: () => {} },
-        { icon: FiFileText, label: "Privacy Policy", onClick: () => {} },
-        { icon: FiHelpCircle, label: "FAQ", onClick: () => {} },
+        { icon: FiFileText, label: "Terms and Conditions", onClick: () => {
+          router.push('/dashboard/'+userType+'/settings/terms');
+        } },
+        { icon: FiFileText, label: "Privacy Policy", onClick: () => {
+          router.push('/dashboard/'+userType+'/settings/privacy');
+        } },
+        { icon: FiHelpCircle, label: "Help Center", onClick: () => {
+          router.push('/dashboard/'+userType+'/help-center');
+        } },
       ]
     }
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   const sectionVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: {
-        duration: 0.4,
-        ease: "easeOut"
+        duration: 0.4
       }
     }
   };
@@ -62,58 +100,74 @@ const SettingsLayout = ({ userType }) => {
   };
 
   return (
-    <motion.div 
-      className={styles.containerFluid}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="row">
-        <div className="col-12">
-          <motion.div 
-            className={styles.card}
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          >
-            <div className={styles.scrollableContainer}>
-              <AnimatePresence>
-                {settingsSections.map((section, index) => (
-                  <motion.section 
-                    key={index} 
-                    className="mb-4"
-                    variants={sectionVariants}
-                    initial="hidden"
-                    animate="visible"
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <h2 className={styles.sectionTitle}>
-                      <section.icon className={styles.icon} />
-                      <span>{section.title}</span>
-                    </h2>
-                    <div className="d-grid gap-3">
-                      {section.items.map((item, itemIndex) => (
-                        <motion.button
-                          key={itemIndex}
-                          className={`${styles.settingsButton} ${item.isDanger ? styles.danger : ''}`}
-                          onClick={item.onClick}
-                          variants={buttonVariants}
-                          whileHover="hover"
-                          whileTap="tap"
-                        >
-                          <item.icon className={styles.icon} />
-                          <span>{item.label}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.section>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div>
+    <>
+      <motion.div 
+        className="dashboard-container"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div className="dashboard-card p-4 mb-4" variants={sectionVariants}>
+          <h1 className="h3 mb-3">Settings</h1>
+          <p className="text-muted mb-0">Manage your account settings and preferences</p>
+        </motion.div>
+
+        <div className="row g-4">
+          {settingsSections.map((section, index) => (
+            <motion.div 
+              key={index} 
+              className="col-md-6"
+              variants={sectionVariants}
+            >
+              <div className="dashboard-card p-4 h-100">
+                <div className="d-flex align-items-center mb-4">
+                  <section.icon className="fs-4 me-2" style={{ color: 'var(--primary-color)' }} />
+                  <h2 className="h5 mb-0">{section.title}</h2>
+                </div>
+                
+                <div className="d-grid gap-2">
+                  {section.items.map((item, itemIndex) => (
+                    <motion.button
+                      key={itemIndex}
+                      className={`dashboard-button d-flex align-items-center gap-2 ${
+                        item.isDanger ? 'text-danger' : 'text-secondary'
+                      }`}
+                      onClick={item.onClick}
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <item.icon className="fs-5" />
+                      <span>{item.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      <ChangePasswd 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
+      />
+      <DeleteAccountModal 
+        isOpen={isDeleteAccountModalOpen} 
+        onClose={() => setIsDeleteAccountModalOpen(false)} 
+      />
+      <EmailPreferencesModal 
+        isOpen={isEmailPreferencesModalOpen} 
+        onClose={() => setIsEmailPreferencesModalOpen(false)} 
+      />
+    </>
   );
 };
 
