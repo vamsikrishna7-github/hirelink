@@ -2,8 +2,8 @@
 import { useState, useEffect, useContext } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
-import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel } from "react-icons/fa";
-import { FiEye } from "react-icons/fi";
+import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel, FaPencil } from "react-icons/fa";
+import { FiEye, FiPencil } from "react-icons/fi";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
@@ -51,6 +51,8 @@ export default function PostedJobActions({ data }) {
     fee: ''
   });
   const [status, setStatus] = useState(data.status === 'approved' ? 'approve' : data.status === 'rejected' ? 'reject' : 'pending');
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -175,9 +177,22 @@ export default function PostedJobActions({ data }) {
   };
 
   const handleStatusUpdate = async (newStatus) => {
+    if (newStatus === 'approve' || newStatus === 'reject') {
+      setStatus(newStatus);
+      setShowAgreement(true);
+      return;
+    }
+  };
+
+  const handleConfirmStatus = async () => {
+    if (!isAgreed) {
+      toast.error('Please agree to the terms before proceeding');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/${data.id}/${newStatus}/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/${data.id}/${status}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,9 +207,11 @@ export default function PostedJobActions({ data }) {
 
       const responseData = await response.json();
       if (responseData) {
-        toast.success(`Bid ${responseData.status} successfully!`);
-        setStatus(newStatus);
+        toast.success(`Bid ${responseData.status} successfully! You will receive a confirmation email shortly.`);
+        setStatus(status);
         setBids(bids.map(bid => bid.id === data.id ? { ...bid, status: responseData.status } : bid));
+        setShowAgreement(false);
+        setIsAgreed(false);
       }
 
     } catch (error) {
@@ -274,6 +291,51 @@ export default function PostedJobActions({ data }) {
                   </motion.button>
                 </div>
               </div>
+
+              {showAgreement && (
+                <div className={styles.agreementSection}>
+                  <div className={styles.agreementContent}>
+                    <h3>Confirmation Required</h3>
+                    <p>By proceeding with this action, you agree to:</p>
+                    <ul>
+                      <li>Confirm your decision to {status === 'approve' ? 'approve' : 'reject'} this bid</li>
+                      <li>Receive a confirmation email with the agreement details</li>
+                      <li>This action cannot be undone</li>
+                    </ul>
+                    <div className={styles.agreementCheckbox}>
+                      <input
+                        type="checkbox"
+                        id="agreement"
+                        checked={isAgreed}
+                        onChange={(e) => setIsAgreed(e.target.checked)}
+                      />
+                      <label htmlFor="agreement">
+                        I understand and agree to the terms above
+                      </label>
+                    </div>
+                    <div className={styles.agreementActions}>
+                      <button
+                        onClick={() => {
+                          setShowAgreement(false);
+                          setIsAgreed(false);
+                          setStatus('pending');
+                        }}
+                        className={styles.cancelButton}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleConfirmStatus}
+                        className={styles.confirmButton}
+                        disabled={isLoading || !isAgreed}
+                      >
+                        {isLoading ? 'Processing...' : 'Confirm'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className={styles.jobDetails}>
                 {/* Consultancy Information */}

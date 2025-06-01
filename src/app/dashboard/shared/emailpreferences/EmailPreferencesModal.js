@@ -66,11 +66,21 @@ const itemVariants = {
 
 const EmailPreferencesModal = ({ isOpen, onClose }) => {
   const [preferences, setPreferences] = useState({
+    security_alerts: true,
+    product_updates: true,
     newsletter: true,
-    productUpdates: true,
-    marketing: false,
-    securityAlerts: true,
     communityUpdates: false,
+    marketingEmails: false,
+    job_alerts: true,
+    job_alerts_frequency: 'daily',
+    job_alerts_time: '09:00',
+    job_alerts_days: 'monday',
+    job_alerts_days_of_week: 'monday',
+    email_notifications: true,
+    email_notifications_frequency: 'daily',
+    email_notifications_time: '09:00',
+    email_notifications_days: 'monday',
+    email_notifications_days_of_week: 'monday'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isBrowser, setIsBrowser] = useState(false);
@@ -85,30 +95,30 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Fetch current preferences when modal opens
       const fetchPreferences = async () => {
         try {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/email-preferences/`,
+            `${process.env.NEXT_PUBLIC_API_URL}/api/email-preference/`,
             {
               headers: {
                 Authorization: `Bearer ${Cookies.get("access_token")}`,
               },
             }
           );
-          setPreferences(response.data.preferences);
+          setPreferences(response.data);
         } catch (error) {
           console.error("Error fetching preferences:", error);
+          toast.error("Failed to load email preferences");
         }
       };
       fetchPreferences();
     }
   }, [isOpen]);
 
-  const handlePreferenceChange = (preference) => {
+  const handlePreferenceChange = (preference, value) => {
     setPreferences(prev => ({
       ...prev,
-      [preference]: !prev[preference]
+      [preference]: value
     }));
   };
 
@@ -117,9 +127,9 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
       setIsLoading(true);
       setSuccess(false);
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/email-preferences/`,
-        { preferences },
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/email-preference/`,
+        preferences,
         {
           headers: {
             "Content-Type": "application/json",
@@ -184,12 +194,12 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
                 <div className={styles.preferenceItem}>
                   <input
                     type="checkbox"
-                    id="securityAlerts"
+                    id="security_alerts"
                     className={styles.checkbox}
-                    checked={preferences.securityAlerts}
-                    onChange={() => handlePreferenceChange("securityAlerts")}
+                    checked={preferences.security_alerts}
+                    onChange={(e) => handlePreferenceChange("security_alerts", e.target.checked)}
                   />
-                  <label htmlFor="securityAlerts" className={styles.checkboxLabel}>
+                  <label htmlFor="security_alerts" className={styles.checkboxLabel}>
                     Security alerts
                   </label>
                 </div>
@@ -203,12 +213,12 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
                 <div className={styles.preferenceItem}>
                   <input
                     type="checkbox"
-                    id="productUpdates"
+                    id="product_updates"
                     className={styles.checkbox}
-                    checked={preferences.productUpdates}
-                    onChange={() => handlePreferenceChange("productUpdates")}
+                    checked={preferences.product_updates}
+                    onChange={(e) => handlePreferenceChange("product_updates", e.target.checked)}
                   />
-                  <label htmlFor="productUpdates" className={styles.checkboxLabel}>
+                  <label htmlFor="product_updates" className={styles.checkboxLabel}>
                     Product updates and announcements
                   </label>
                 </div>
@@ -218,7 +228,7 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
                     id="newsletter"
                     className={styles.checkbox}
                     checked={preferences.newsletter}
-                    onChange={() => handlePreferenceChange("newsletter")}
+                    onChange={(e) => handlePreferenceChange("newsletter", e.target.checked)}
                   />
                   <label htmlFor="newsletter" className={styles.checkboxLabel}>
                     Weekly newsletter
@@ -230,6 +240,72 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className={styles.preferenceGroup}>
+                <h3 className={styles.preferenceTitle}>Job Alerts</h3>
+                <div className={styles.preferenceItem}>
+                  <input
+                    type="checkbox"
+                    id="job_alerts"
+                    className={styles.checkbox}
+                    checked={preferences.job_alerts}
+                    onChange={(e) => handlePreferenceChange("job_alerts", e.target.checked)}
+                  />
+                  <label htmlFor="job_alerts" className={styles.checkboxLabel}>
+                    Job alerts
+                  </label>
+                </div>
+                {preferences.job_alerts && (
+                  <div className={styles.preferenceSubGroup}>
+                    <div className={styles.preferenceItem}>
+                      <label htmlFor="job_alerts_frequency" className={styles.selectLabel}>
+                        Frequency:
+                      </label>
+                      <select
+                        id="job_alerts_frequency"
+                        value={preferences.job_alerts_frequency}
+                        onChange={(e) => handlePreferenceChange("job_alerts_frequency", e.target.value)}
+                        className={styles.select}
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div className={styles.preferenceItem}>
+                      <label htmlFor="job_alerts_time" className={styles.selectLabel}>
+                        Time:
+                      </label>
+                      <input
+                        type="time"
+                        id="job_alerts_time"
+                        value={preferences.job_alerts_time}
+                        onChange={(e) => handlePreferenceChange("job_alerts_time", e.target.value)}
+                        className={styles.timeInput}
+                      />
+                    </div>
+                    <div className={styles.preferenceItem}>
+                      <label htmlFor="job_alerts_days" className={styles.selectLabel}>
+                        Day:
+                      </label>
+                      <select
+                        id="job_alerts_days"
+                        value={preferences.job_alerts_days}
+                        onChange={(e) => handlePreferenceChange("job_alerts_days", e.target.value)}
+                        className={styles.select}
+                      >
+                        <option value="monday">Monday</option>
+                        <option value="tuesday">Tuesday</option>
+                        <option value="wednesday">Wednesday</option>
+                        <option value="thursday">Thursday</option>
+                        <option value="friday">Friday</option>
+                        <option value="saturday">Saturday</option>
+                        <option value="sunday">Sunday</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.preferenceGroup}>
                 <h3 className={styles.preferenceTitle}>Community & Marketing</h3>
                 <div className={styles.preferenceItem}>
                   <input
@@ -237,7 +313,7 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
                     id="communityUpdates"
                     className={styles.checkbox}
                     checked={preferences.communityUpdates}
-                    onChange={() => handlePreferenceChange("communityUpdates")}
+                    onChange={(e) => handlePreferenceChange("communityUpdates", e.target.checked)}
                   />
                   <label htmlFor="communityUpdates" className={styles.checkboxLabel}>
                     Community updates
@@ -246,12 +322,12 @@ const EmailPreferencesModal = ({ isOpen, onClose }) => {
                 <div className={styles.preferenceItem}>
                   <input
                     type="checkbox"
-                    id="marketing"
+                    id="marketingEmails"
                     className={styles.checkbox}
-                    checked={preferences.marketing}
-                    onChange={() => handlePreferenceChange("marketing")}
+                    checked={preferences.marketingEmails}
+                    onChange={(e) => handlePreferenceChange("marketingEmails", e.target.checked)}
                   />
-                  <label htmlFor="marketing" className={styles.checkboxLabel}>
+                  <label htmlFor="marketingEmails" className={styles.checkboxLabel}>
                     Promotional offers
                   </label>
                 </div>
