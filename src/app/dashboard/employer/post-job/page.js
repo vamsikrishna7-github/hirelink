@@ -32,6 +32,8 @@ export default function PostJob() {
     max_salary: '',
     currency: 'INR',
     salary_type: 'yearly',
+    bid_budget: 1,
+    bid_candidates: 1,
     description: '',
     requirements: '',
     responsibilities: '',
@@ -431,6 +433,40 @@ useEffect(() => {
                   <option value="monthly">Monthly</option>
                   <option value="hourly">Hourly</option>
                 </select>
+              </div>
+            </div>
+
+            {/* bid budget */}
+            <div className="row gx-3">
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                ₹ Bid Budget
+                </label>
+                <div className="d-flex gap-2">
+                  <input 
+                    type="number" 
+                    name="bid_budget"
+                    value={formData.bid_budget}
+                    onChange={handleChange}
+                    className={`${styles.input} form-control`} 
+                    placeholder="Total Bid budget" 
+                    required
+                  />
+                </div>
+              </div>
+              <div className="col-md-6 mb-4">
+                <label className={`${styles.label} form-label d-flex align-items-center gap-2`}>
+                  <FiUsers /> No of candidate required
+                </label>
+                <input
+                  type="number"
+                  name="bid_candidates"
+                  value={formData.bid_candidates}
+                  onChange={handleChange}
+                  className={`${styles.input} form-select`}
+                  placeholder="Total required candidates" 
+                  required
+                />
               </div>
             </div>
 

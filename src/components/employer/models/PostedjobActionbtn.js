@@ -64,6 +64,8 @@ export default function PostedJobActions({ data }) {
     max_salary: '',
     currency: '',
     salary_type: '',
+    bid_budget: '',
+    bid_candidates: '',
     description: '',
     requirements: '',
     responsibilities: '',
@@ -415,6 +417,28 @@ export default function PostedJobActions({ data }) {
                     </div>
 
                     <div className={styles.formGroup}>
+                      <label>Bid Budget</label>
+                      <input
+                        type="number"
+                        name="bid_budget"
+                        value={formData.bid_budget}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>No of Candidates</label>
+                      <input
+                        type="number"
+                        name="bid_candidates"
+                        value={formData.bid_candidates}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
                       <label>Application Deadline</label>
                       <input
                         type="date"
@@ -550,6 +574,10 @@ export default function PostedJobActions({ data }) {
                     <div className={styles.infoRow}>
                       <p><strong>Salary:</strong> {data.min_salary} - {data.max_salary} {data.currency} ({data.salary_type})</p>
                       <p><strong>Posted Date:</strong> {new Date(data.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <p><strong>Bid Budget:</strong> {data.bid_budget} {data.currency}</p>
+                      <p><strong>Required Candidates:</strong> {data.bid_candidates}</p>
                     </div>
                   </div>
 

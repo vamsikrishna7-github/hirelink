@@ -292,6 +292,7 @@ export default function PostedJobsPage() {
                     <th>Location</th>
                     <th>Posted Date</th>
                     <th>Deadline</th>
+                    <th>Maximum Bid</th>
                     <th>Vacancies</th>
                     <th>Salary</th>
                     <th className="text-end pe-4">Actions</th>
@@ -360,6 +361,9 @@ export default function PostedJobsPage() {
                           }`}>
                             {formatDate(job.deadline)}
                           </span>
+                        </td>
+                        <td>
+                          <span className="fw-semibold">{job.bid_budget} {job.currency} </span>
                         </td>
                         <td>
                           <span className="fw-semibold">{job.vacancies}</span>

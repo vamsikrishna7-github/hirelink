@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import { ReceivedBidsContext } from "@/context/employer/Receivedbids";
+import { initializeRazorpay } from "@/utils/razorpay";
 
 // Custom modal styles
 const customStyles = {
@@ -53,6 +54,8 @@ export default function PostedJobActions({ data }) {
   const [status, setStatus] = useState(data.status === 'approved' ? 'approve' : data.status === 'rejected' ? 'reject' : 'pending');
   const [isAgreed, setIsAgreed] = useState(false);
   const [showAgreement, setShowAgreement] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +68,7 @@ export default function PostedJobActions({ data }) {
   const handleClose = () => {
     setModalIsOpen(false);
     setShowBidForm(false);
+    setPaymentDetails(null);
   };
 
   const handleInputChange = (e) => {
@@ -184,6 +188,104 @@ export default function PostedJobActions({ data }) {
     }
   };
 
+  const initializePayment = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-order/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        },
+        body: JSON.stringify({
+          bid_id: data.id
+        })
+      });
+      const orderData = await response.json();
+
+      if (!response.ok) {
+        toast.error(orderData.error);
+        throw new Error('Failed to create payment order');
+      }
+
+      setPaymentDetails(orderData);
+
+      // Initialize Razorpay
+      const Razorpay = await initializeRazorpay();
+      if (!Razorpay) {
+        throw new Error('Razorpay SDK failed to load');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'HireLink',
+        description: 'Payment for Bid Approval',
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/verify-payment/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Cookies.get('access_token')}`
+              },
+              body: JSON.stringify({
+                payment_id: orderData.payment_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok) {
+              toast.error(verifyData.error);
+              throw new Error('Payment verification failed');
+            }
+
+            // If payment is successful, proceed with bid approval
+            console.log('verifyData= ', verifyData);  
+            if (verifyData.status === 'success') {
+              console.log('Payment successful= ', verifyData.status); 
+              setPaymentStatus(true);
+            }
+
+            await handleConfirmStatus();
+            toast.success('Payment successful! Bid has been approved.');
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast.error('Payment verification failed. Please try again.');
+          }
+        },
+        prefill: {
+          name: data.consultancy.consultancy_name,
+          email: data.consultancy.email,
+          contact: data.consultancy.phone_number
+        },
+        theme: {
+          color: '#2563eb'
+        },
+        modal: {
+          ondismiss: function() {
+            toast.info('Payment cancelled');
+          }
+        }
+      };
+
+      const razorpay = new Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Error initializing payment:', error);
+      toast.error(error.message || 'Failed to initialize payment. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleConfirmStatus = async () => {
     if (!isAgreed) {
       toast.error('Please agree to the terms before proceeding');
@@ -192,6 +294,15 @@ export default function PostedJobActions({ data }) {
 
     try {
       setIsLoading(true);
+      
+      if (status === 'approve' && !paymentStatus) {
+        // Initialize payment for approval
+        console.log('Initializing payment= ', paymentStatus);
+        await initializePayment();
+        return;
+      }
+
+      // For rejection, proceed normally
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/${data.id}/${status}/`, {
         method: 'POST',
         headers: {
@@ -299,6 +410,9 @@ export default function PostedJobActions({ data }) {
                     <p>By proceeding with this action, you agree to:</p>
                     <ul>
                       <li>Confirm your decision to {status === 'approve' ? 'approve' : 'reject'} this bid</li>
+                      {status === 'approve' && (
+                        <li>Make a payment of ₹{data.fee} to approve this bid</li>
+                      )}
                       <li>Receive a confirmation email with the agreement details</li>
                       <li>This action cannot be undone</li>
                     </ul>
@@ -330,7 +444,7 @@ export default function PostedJobActions({ data }) {
                         className={styles.confirmButton}
                         disabled={isLoading || !isAgreed}
                       >
-                        {isLoading ? 'Processing...' : 'Confirm'}
+                        {isLoading ? 'Processing...' : status === 'approve' ? 'Proceed to Payment' : 'Confirm'}
                       </button>
                     </div>
                   </div>

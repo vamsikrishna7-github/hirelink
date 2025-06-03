@@ -329,6 +329,10 @@ export default function PostedJobActions({ data }) {
                       <p><strong>Salary:</strong> {data.min_salary} - {data.max_salary} {data.currency} ({data.salary_type})</p>
                       <p><strong>Posted Date:</strong> {new Date(data.created_at).toLocaleDateString()}</p>
                     </div>
+                    <div className={styles.infoRow}>
+                      <p><strong>Bid Budget:</strong> {data.bid_budget} {data.currency} </p>
+                      <p><strong>No of Candidates required:</strong> {data.bid_candidates}</p>
+                    </div>
                   </div>
 
                   <details className={styles.details}>
