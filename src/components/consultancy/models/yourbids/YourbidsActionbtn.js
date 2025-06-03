@@ -248,10 +248,9 @@ export default function BidAction({ data, onBidUpdate }) {
 
   const getFeePercentage = (fee) => {
     const feeValue = parseFloat(fee);
-    if (isNaN(feeValue) || !jobDetails?.min_salary || !jobDetails?.max_salary) return null;
-    const avgSalary = (parseFloat(jobDetails.min_salary) + parseFloat(jobDetails.max_salary)) / 2;
-    if (avgSalary === 0) return null;
-    return ((feeValue / avgSalary) * 100).toFixed(2);
+    if (isNaN(feeValue)) return null;
+    if (jobDetails?.bid_budget === 0) return null;
+    return ((feeValue / jobDetails?.bid_budget) * 100).toFixed(2);
   };
 
   if (!isBrowser) return null;
@@ -449,16 +448,16 @@ export default function BidAction({ data, onBidUpdate }) {
                       variants={itemVariants}
                     >
                       <div className={styles.feeSection}>
-                        <h4><FaDollarSign className="me-2" /> Proposed Fee</h4>
+                        <h4>₹&nbsp; Proposed Fee</h4>
                         <p className={styles.feeAmount}>
                           {parseFloat(data.fee).toLocaleString('en-US', {
                             style: 'currency',
-                            currency: 'USD'
+                            currency: 'INR'
                           })}
                         </p>
                         {jobDetails && getFeePercentage(data.fee) !== null && (
                           <p className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
-                            Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(data.fee)}%</strong> of the average salary range ({jobDetails.min_salary} - {jobDetails.max_salary} {jobDetails.currency})
+                            Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(data.fee)}%</strong> of the bid budget ({jobDetails.bid_budget} {jobDetails.currency})
                           </p>
                         )}
                       </div>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
-import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel, FaPercent } from "react-icons/fa";
+import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel, FaPercent, FaExclamationTriangle } from "react-icons/fa";
 import { FiEye } from "react-icons/fi";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,7 +46,8 @@ export default function PostedJobActions({ data }) {
   const [showBidForm, setShowBidForm] = useState(false);
   const [bidData, setBidData] = useState({
     proposal: '',
-    fee: ''
+    fee_percentage: null,
+    fee: null
   });
   const router = useRouter();
 
@@ -70,13 +71,7 @@ export default function PostedJobActions({ data }) {
     }));
   };
 
-  const getFeePercentage = () => {
-    const fee = parseFloat(bidData.fee);
-    if (isNaN(fee) || !data.min_salary || !data.max_salary) return null;
-    const avgSalary = (parseFloat(data.min_salary) + parseFloat(data.max_salary)) / 2;
-    if (avgSalary === 0) return null;
-    return ((fee / avgSalary) * 100).toFixed(2);
-  };
+
 
   const handleBidSubmit = async (e) => {
     e.preventDefault();
@@ -89,6 +84,11 @@ export default function PostedJobActions({ data }) {
       }
       if (parseFloat(bidData.fee) <= 0) {
         throw new Error('Fee must be a positive amount');
+      }
+
+      if(bidData?.fee < data.bid_budget/2 || bidData?.fee > data.bid_budget){
+        toast.error("Fee must be greater than half of the bid budget and less than the bid budget or equal to the bid budget");
+        return;
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/`, {
@@ -253,23 +253,40 @@ export default function PostedJobActions({ data }) {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Fee (₹)</label>
-                    <input
-                      type="number"
-                      name="fee"
-                      value={bidData.fee}
-                      onChange={handleInputChange}
-                      required
-                      min="1"
-                      step="1"
-                      placeholder="Enter your fee amount"
-                    />
-                    {bidData.fee && getFeePercentage() !== null && (
-                      <div className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
-                        Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage()}%</strong> of the average salary range ({data.min_salary} - {data.max_salary} {data.currency})
-                      </div>
-                    )}
-                  </div>
+  <label>Fee (%)</label>
+  <input
+    type="number"
+    name="fee_percentage"
+    className={`${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'border-danger' : ''}`}
+    value={bidData.fee_percentage || ''}
+    onChange={(e) => {
+      const percentage = parseFloat(e.target.value);
+      setBidData({
+        ...bidData,
+        fee_percentage: percentage,
+        fee: (percentage / 100) * parseInt(data.bid_budget)
+      });
+    }}
+    required
+    min={0}
+    max={100}
+    step="0.01"
+    placeholder="Enter your fee percentage"
+  />
+  {bidData.fee_percentage && !isNaN(bidData.fee_percentage) && !isNaN(bidData.fee) && (
+    <>
+    <p className={styles.amountInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+      Fee amount: <strong className={`text-success text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
+                                ₹&nbsp;
+                                {parseFloat(bidData.fee).toLocaleString()}
+      </strong>
+    </p>
+          <span className={`text-danger text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
+          {bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? <><FaExclamationTriangle className="me-2" /> Fee must be greater than 50% of the bid budget and less than the bid budget or equal to the bid budget</> : ''}
+        </span>
+    </>
+  )}
+</div>
 
                   <div className={styles.formActions}>
                     <button
@@ -330,8 +347,8 @@ export default function PostedJobActions({ data }) {
                       <p><strong>Posted Date:</strong> {new Date(data.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className={styles.infoRow}>
-                      <p><strong>Bid Budget:</strong> {data.bid_budget} {data.currency} </p>
-                      <p><strong>No of Candidates required:</strong> {data.bid_candidates}</p>
+                      <p className="text-primary"><strong>Bid Budget:</strong> {data.bid_budget} {data.currency} </p>
+                      <p className="text-primary"><strong>No of Candidates required:</strong> {data.bid_candidates}</p>
                     </div>
                   </div>
 

@@ -292,7 +292,7 @@ export default function PostedJobsPage() {
                     <th>Location</th>
                     <th>Posted Date</th>
                     <th>Deadline</th>
-                    <th>Maximum Bid</th>
+                    <th className="text-primary fw-bold">Max. Bid</th>
                     <th>Vacancies</th>
                     <th>Salary</th>
                     <th className="text-end pe-4">Actions</th>
@@ -363,7 +363,10 @@ export default function PostedJobsPage() {
                           </span>
                         </td>
                         <td>
-                          <span className="fw-semibold">{job.bid_budget} {job.currency} </span>
+                          <span className="fw-semibold text-primary">
+                          ₹&nbsp;
+                          {parseFloat(job.bid_budget).toLocaleString()}
+                          </span>
                         </td>
                         <td>
                           <span className="fw-semibold">{job.vacancies}</span>

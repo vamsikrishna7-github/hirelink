@@ -247,14 +247,15 @@ export default function PostedJobsPage() {
                               <span className="fw-semibold">{formatCurrency(bid.fee)}</span>
                               {job && (() => {
                                 const fee = parseFloat(bid.fee);
-                                const minSalary = parseFloat(job.min_salary);
-                                const maxSalary = parseFloat(job.max_salary);
-                                if (!isNaN(fee) && !isNaN(minSalary) && !isNaN(maxSalary)) {
-                                  const avgSalary = (minSalary + maxSalary) / 2;
-                                  const percentage = ((fee / avgSalary) * 100).toFixed(2);
+                                if (!isNaN(fee)) {
+                                  const percentage = ((fee / job.bid_budget) * 100).toFixed(2);
                                   return (
                                     <small className="text-muted">
-                                      <strong className="text-primary">{percentage}%</strong> of avg. salary
+                                      <strong className="text-primary">{percentage}%</strong> of the bid budget 
+                                      <span className="fw-semibold text-primary">
+                                      &nbsp;₹&nbsp;
+                                      {parseFloat(job.bid_budget).toLocaleString()}
+                                      </span>
                                     </small>
                                   );
                                 }

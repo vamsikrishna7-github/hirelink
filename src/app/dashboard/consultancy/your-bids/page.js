@@ -276,19 +276,16 @@ export default function YourBidsPage() {
                           <td>
                             <div className="d-flex flex-column">
                               <span className="fw-semibold">
-                                <FiDollarSign className="me-1" />
+                                ₹&nbsp;
                                 {parseFloat(bid.fee).toLocaleString()}
                               </span>
                               {jobs[bid.job] && (() => {
                                 const fee = parseFloat(bid.fee);
-                                const minSalary = parseFloat(jobs[bid.job].min_salary);
-                                const maxSalary = parseFloat(jobs[bid.job].max_salary);
-                                if (!isNaN(fee) && !isNaN(minSalary) && !isNaN(maxSalary)) {
-                                  const avgSalary = (minSalary + maxSalary) / 2;
-                                  const percentage = ((fee / avgSalary) * 100).toFixed(2);
+                                if (!isNaN(fee)) {
+                                  const percentage = ((fee / job.bid_budget) * 100).toFixed(2);
                                   return (
                                     <small className="text-muted">
-                                      <strong className="text-primary">{percentage}%</strong> of avg. salary
+                                      <strong className="text-primary">{percentage}%</strong>
                                     </small>
                                   );
                                 }
