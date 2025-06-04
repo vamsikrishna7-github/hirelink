@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
-import { FaEye, FaTimes, FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaDollarSign, FaFileAlt, FaUndo } from "react-icons/fa";
+import { FaEye, FaTimes, FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaDollarSign, FaFileAlt, FaUndo, FaExclamationTriangle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 import { toast } from 'react-toastify';
@@ -198,6 +198,10 @@ export default function BidAction({ data, onBidUpdate }) {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    if(editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget) {
+      toast.error('Fee must be greater than 50% of the bid budget and less than the bid budget or equal to the bid budget');
+      return;
+    }
     try {
       setIsLoading(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/update-bid/${data.id}/`, {
@@ -358,7 +362,7 @@ export default function BidAction({ data, onBidUpdate }) {
                   >
                     
                     <div className={styles.formGroup}>
-                      <label htmlFor="fee">Proposed Fee ($)</label>
+                      <label htmlFor="fee">Proposed Fee (₹)</label>
                       <input
                         type="number"
                         id="fee"
@@ -368,11 +372,12 @@ export default function BidAction({ data, onBidUpdate }) {
                         required
                         min="0"
                         step="0.01"
-                        className={styles.formInput}
+                        className={`${styles.formInput} ${editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget ? 'border-danger' : ''}`}
                       />
                       {editForm.fee && jobDetails && getFeePercentage(editForm.fee) !== null && (
                         <div className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
-                          Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(editForm.fee)}%</strong> of the average salary range ({jobDetails.min_salary} - {jobDetails.max_salary} {jobDetails.currency})
+                          Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(editForm.fee)}%</strong> of the bid budget ₹&nbsp;{parseFloat(jobDetails.bid_budget).toLocaleString()}
+                          <br/>{editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget ? <span className="text-danger"> <FaExclamationTriangle className='text-danger me-1'/> Fee must be greater than 50% of the bid budget and less than the bid budget or equal to the bid budget</span> : ''}
                         </div>
                       )}
                     </div>

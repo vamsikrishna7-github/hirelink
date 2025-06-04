@@ -285,7 +285,7 @@ export default function YourBidsPage() {
                                   const percentage = ((fee / job.bid_budget) * 100).toFixed(2);
                                   return (
                                     <small className="text-muted">
-                                      <strong className="text-primary">{percentage}%</strong>
+                                      <p><strong className="text-primary">{percentage}%</strong> of the bid budget ₹&nbsp;{parseFloat(job.bid_budget).toLocaleString()}</p>
                                     </small>
                                   );
                                 }
