@@ -372,12 +372,12 @@ export default function BidAction({ data, onBidUpdate }) {
                         required
                         min="0"
                         step="0.01"
-                        className={`${styles.formInput} ${editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget ? 'border-danger' : ''}`}
+                        className={`${styles.formInput} ${editForm?.fee < jobDetails?.bid_budget/2 || editForm?.fee > jobDetails?.bid_budget ? 'border-danger' : ''}`}
                       />
                       {editForm.fee && jobDetails && getFeePercentage(editForm.fee) !== null && (
                         <div className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
                           Your bid is <strong className="text-primary text-bold text-lg">{getFeePercentage(editForm.fee)}%</strong> of the bid budget ₹&nbsp;{parseFloat(jobDetails.bid_budget).toLocaleString()}
-                          <br/>{editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget ? <span className="text-danger"> <FaExclamationTriangle className='text-danger me-1'/> Fee must be greater than 50% of the bid budget and less than the bid budget or equal to the bid budget</span> : ''}
+                          <br/>{editForm.fee < jobDetails.bid_budget/2 || editForm.fee > jobDetails.bid_budget ? <span className="text-danger"> <FaExclamationTriangle className='text-danger me-1'/> Fee must be greater than 50% of the ₹&nbsp;{parseFloat(jobDetails.bid_budget).toLocaleString()} and less than the ₹&nbsp;{parseFloat(jobDetails.bid_budget).toLocaleString()} or equal to the ₹&nbsp;{parseFloat(jobDetails.bid_budget).toLocaleString()}</span> : ''}
                         </div>
                       )}
                     </div>

@@ -282,7 +282,7 @@ export default function PostedJobActions({ data }) {
       </strong>
     </p>
           <span className={`text-danger text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
-          {bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? <><FaExclamationTriangle className="me-2" /> Fee must be greater than 50% of the bid budget and less than the bid budget or equal to the bid budget</> : ''}
+          {bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? <><FaExclamationTriangle className="me-2" /> Fee must be greater than 50% of the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} and less than the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} or equal to the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()}</> : ''}
         </span>
     </>
   )}
