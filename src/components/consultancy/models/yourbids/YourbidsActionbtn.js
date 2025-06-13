@@ -271,16 +271,18 @@ export default function BidAction({ data, onBidUpdate }) {
         >
           <FaEye size={16} />
         </motion.button>
-        <motion.button 
-          onClick={confirmWithdrawal}
-          className={styles.viewButton}
-          title="Withdraw bid"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          disabled={isLoading}
-        >
-          <Undo2 size={16} />
-        </motion.button>
+        {data.status.toLowerCase() != 'approved' || data.status.toLowerCase() != 'rejected' && (
+          <motion.button 
+            onClick={confirmWithdrawal}
+            className={styles.viewButton}
+            title="Withdraw bid"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            disabled={isLoading}
+          >
+            <Undo2 size={16} />
+          </motion.button>
+        )}
       </div>
 
       <Modal

@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import Image from "next/image";
 import ReceivedBidsActionbtn from "@/components/employer/models/received-bids/ReceivedBidsActionbtn";
 import { ReceivedBidsContext } from "@/context/employer/Receivedbids";
+import ReviewCandidates from "@/components/employer/models/received-bids/reviewcandidates/Reviewcandidates";
 
 export default function PostedJobsPage() {
   const { bids, setBids } = useContext(ReceivedBidsContext);
@@ -284,6 +285,13 @@ export default function PostedJobsPage() {
                                 job: jobs[bid.job] || {},
                                 consultancy: consultancies[bid.consultancy] || {}
                               }} />
+                              {bid.status === "approved" && (
+                              <ReviewCandidates data={{
+                                ...bid,
+                                job: jobs[bid.job] || {},
+                                consultancy: consultancies[bid.consultancy] || {}
+                              }} />
+                              )}
                             </div>
                           </td>
                         </tr>

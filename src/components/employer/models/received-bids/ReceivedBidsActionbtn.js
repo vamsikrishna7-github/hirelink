@@ -531,9 +531,7 @@ export default function PostedJobActions({ data }) {
                     <div className={styles.infoRow}>
                       <p className={styles.percentageInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
                         <strong>Fee:</strong> <strong className="text-primary" >₹{data.fee}</strong><br/>
-                        {getFeePercentage() !== null && (
-                          <><strong className="text-primary">{getFeePercentage()}%</strong> of average salary range</>
-                        )}
+                          <><strong className="text-primary">{(data.fee/data.job.bid_budget*100).toFixed(2)}%</strong> of the ₹&nbsp;{(data.job.bid_budget).toLocaleString()}</>
                       </p>
                       <p><strong>Submitted On:</strong> {new Date(data.created_at).toLocaleDateString()}</p>
                     </div>

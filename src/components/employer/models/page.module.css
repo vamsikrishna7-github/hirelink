@@ -221,7 +221,7 @@
   align-items: center;
   color: #495057;
   font-weight: 500;
-  user-select: none;
+  -webkit-user-select: none;
 }
 
 .summary:hover {

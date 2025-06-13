@@ -8,6 +8,7 @@ import { ClipLoader } from "react-spinners";
 import Link from "next/link";
 import Image from "next/image";
 import YourbidsActionbtn from "@/components/consultancy/models/yourbids/YourbidsActionbtn";
+import SubmitCandidates from "@/components/consultancy/models/yourbids/submitcandidates/submitcandidates";
 
 
 
@@ -301,12 +302,12 @@ export default function YourBidsPage() {
                           <td>{formatDate(bid.created_at)}</td>
                           <td className="text-end pe-4">
                             <div className="d-flex justify-content-end gap-2">
-                              {bid.status.toLowerCase() === 'pending' && (
+                            <YourbidsActionbtn data={bid} />
+                              {bid.status.toLowerCase() === 'approved' && (
                                 <>
-                                  <YourbidsActionbtn data={bid} />
+                                  <SubmitCandidates bidId={bid.id} />
                                 </>
-                              )}
-                            </div>
+                              )}                            </div>
                           </td>
                         </tr>
                       );
