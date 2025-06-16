@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import { ReceivedBidsContext } from "@/context/employer/Receivedbids";
 import { initializeRazorpay } from "@/utils/razorpay";
+import axios from "axios";
+import { Spinner } from "react-bootstrap";
 
 // Custom modal styles
 const customStyles = {
@@ -40,6 +42,7 @@ const customStyles = {
   },
 };
 
+
 export default function PostedJobActions({ data }) {
   const { bids, setBids } = useContext(ReceivedBidsContext);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -58,6 +61,11 @@ export default function PostedJobActions({ data }) {
   const [paymentStatus, setPaymentStatus] = useState(false);
   const router = useRouter();
 
+  const [checkPaymentForAlert, setCheckPaymentForAlert] = useState(false);
+  const [isLoadingPaymentForAlert, setIsLoadingPaymentForAlert] = useState(false);
+
+  const [isLoadingVerifyPayment, setIsLoadingVerifyPayment] = useState(false);
+
   useEffect(() => {
     setIsBrowser(true);
     if (isBrowser) {
@@ -65,120 +73,30 @@ export default function PostedJobActions({ data }) {
     }
   }, [isBrowser]);
 
+
+
+  const checkPaymentStatusForAlert = async () => {
+    setIsLoadingPaymentForAlert(true);
+    try{
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-payment-details/${data.job.id}/`, {
+      headers: {
+        'Authorization': `Bearer ${Cookies.get('access_token')}`
+      }
+    });
+  }catch(error){
+    setCheckPaymentForAlert(true);
+  }finally{
+    setIsLoadingPaymentForAlert(false);
+  }
+  }
+
+
   const handleClose = () => {
     setModalIsOpen(false);
     setShowBidForm(false);
     setPaymentDetails(null);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setBidData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleBidSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setIsLoading(true);
-      
-      // Validate fee is a positive number
-      if (isNaN(bidData.fee) || bidData.fee === '') {
-        throw new Error('Fee must be a number');
-      }
-      if (parseFloat(bidData.fee) <= 0) {
-        throw new Error('Fee must be a positive amount');
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bids/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Cookies.get('access_token')}`
-        },
-        body: JSON.stringify({
-          job: data.id,
-          proposal: bidData.proposal,
-          fee: parseFloat(bidData.fee)
-        })
-      });
-
-      let responseData;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        try {
-          responseData = await response.json();
-        } catch (jsonError) {
-          console.error('Error parsing JSON response:', jsonError);
-          toast.error('Server error occurred. Please try again later.');
-          return;
-        }
-      } else {
-        console.error('Server returned non-JSON response');
-        toast.error('Server error occurred. Please try again later.');
-        return;
-      }
-
-      if (!response.ok) {
-        // Handle specific validation errors with user-friendly messages
-        if (response.status === 400) {
-          if (responseData.non_field_errors) {
-            const errorMessage = responseData.non_field_errors[0];
-            if (errorMessage.includes("3 bids per job")) {
-              toast.error("You have reached the maximum limit of 3 bids for this job. Please review your existing bids.");
-            } else if (errorMessage.includes("already submitted this proposal")) {
-              toast.error("You have already submitted this exact proposal for this job. Please modify your proposal.");
-            } else {
-              toast.error(errorMessage);
-            }
-            return;
-          }
-          if (responseData.proposal) {
-            toast.error(responseData.proposal[0]);
-            return;
-          }
-          if (responseData.fee) {
-            toast.error(responseData.fee[0]);
-            return;
-          }
-        }
-        if (response.status === 403) {
-          toast.error("You don't have permission to perform this action.");
-          return;
-        }
-        if (response.status === 401) {
-          toast.error("Your session has expired. Please log in again.");
-          return;
-        }
-        if (response.status >= 500) {
-          toast.error("Server error occurred. Please try again later.");
-          return;
-        }
-        toast.error(responseData.detail || 'Failed to submit bid. Please try again.');
-        return;
-      }
-
-      toast.success('Bid submitted successfully! Your proposal has been sent to the employer.');
-      setShowBidForm(false);
-      setBidData({ proposal: '', fee: '' });
-    } catch (error) {
-      console.error('Error submitting bid:', error);
-      // Handle specific error cases
-      if (error.message.includes("3 bids per job")) {
-        toast.error("You have reached the maximum limit of 3 bids for this job. Please review your existing bids.");
-      } else if (error.message.includes("already submitted this proposal")) {
-        toast.error("You have already submitted this exact proposal for this job. Please modify your proposal.");
-      } else if (error.message.includes("Failed to fetch")) {
-        toast.error("Network error. Please check your internet connection and try again.");
-      } else {
-        toast.error(error.message || 'Failed to submit bid. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleStatusUpdate = async (newStatus) => {
     if (newStatus === 'approve' || newStatus === 'reject') {
@@ -210,12 +128,22 @@ export default function PostedJobActions({ data }) {
 
       setPaymentDetails(orderData);
 
+      if(orderData.status === 'approved'){
+        toast.success('Bid has been approved.');
+        setStatus(status);
+        setBids(bids.map(bid => bid.id === data.id ? { ...bid, status: 'approved' } : bid));
+        setShowAgreement(false);
+        setIsAgreed(false);
+        setPaymentStatus(true);
+        return;
+      }
+
       // Initialize Razorpay
       const Razorpay = await initializeRazorpay();
       if (!Razorpay) {
         throw new Error('Razorpay SDK failed to load');
       }
-
+      
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
@@ -225,6 +153,7 @@ export default function PostedJobActions({ data }) {
         order_id: orderData.order_id,
         handler: async function (response) {
           try {
+            setIsLoadingVerifyPayment(true);
             // Verify payment
             const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/verify-payment/`, {
               method: 'POST',
@@ -250,20 +179,25 @@ export default function PostedJobActions({ data }) {
             // If payment is successful, proceed with bid approval
             console.log('verifyData= ', verifyData);  
             if (verifyData.status === 'success') {
+              toast.success(`Payment successful! Bid has been approved.`);
+              setStatus(status);
+              setBids(bids.map(bid => bid.id === data.id ? { ...bid, status: 'approved' } : bid));
+              setShowAgreement(false);
+              setIsAgreed(false);
               console.log('Payment successful= ', verifyData.status); 
               setPaymentStatus(true);
             }
 
-            await handleConfirmStatus();
-            toast.success('Payment successful! Bid has been approved.');
           } catch (error) {
             console.error('Payment verification failed:', error);
             toast.error('Payment verification failed. Please try again.');
+          } finally {
+            setIsLoadingVerifyPayment(false);
           }
         },
         prefill: {
           name: data.consultancy.consultancy_name,
-          email: data.consultancy.email,
+          email: data.job.company_email,
           contact: data.consultancy.phone_number
         },
         theme: {
@@ -333,15 +267,9 @@ export default function PostedJobActions({ data }) {
     }
   };
 
-  const getFeePercentage = () => {
-    const fee = parseFloat(data.fee);
-    if (isNaN(fee) || !data.job?.min_salary || !data.job?.max_salary) return null;
-    const avgSalary = (parseFloat(data.job.min_salary) + parseFloat(data.job.max_salary)) / 2;
-    if (avgSalary === 0) return null;
-    return ((fee / avgSalary) * 100).toFixed(2);
-  };
 
   if (!isBrowser) return null;
+  
 
   return (
     <>
@@ -382,7 +310,12 @@ export default function PostedJobActions({ data }) {
                   <div className={styles.statusDropdown}>
                     <select
                       value={status}
-                      onChange={(e) => handleStatusUpdate(e.target.value)}
+                      onChange={async (e) => {
+                        handleStatusUpdate(e.target.value);
+                        if(e.target.value === 'approve' && data.status !== 'approved'){
+                          await checkPaymentStatusForAlert();
+                        }
+                      }}
                       className={styles.statusSelect}
                       disabled={isLoading}
                     >
@@ -404,14 +337,22 @@ export default function PostedJobActions({ data }) {
               </div>
 
               {showAgreement && (
+                <>
+                {status === 'approve' && isLoadingPaymentForAlert && data.status !== 'approved' ?
+                <div className={styles.agreementSection} style={{textAlign: 'center'}}>
+                  <div className={styles.agreementContent}>
+                    <Spinner animation="border" role="status" />
+                  </div>
+                </div>
+                : data.status !== 'approved' || status === 'reject' ? (
                 <div className={styles.agreementSection}>
                   <div className={styles.agreementContent}>
                     <h3>Confirmation Required</h3>
                     <p>By proceeding with this action, you agree to:</p>
                     <ul>
                       <li>Confirm your decision to {status === 'approve' ? 'approve' : 'reject'} this bid</li>
-                      {status === 'approve' && (
-                        <li>Make a payment of ₹{data.fee} to approve this bid</li>
+                      {status === 'approve' && checkPaymentForAlert && (
+                        <li>Make a payment of <strong className="text-primary">₹{(data.job.bid_budget/100*30).toLocaleString()}</strong> to approve this bid</li>
                       )}
                       <li>Receive a confirmation email with the agreement details</li>
                       <li>This action cannot be undone</li>
@@ -435,20 +376,23 @@ export default function PostedJobActions({ data }) {
                           setStatus('pending');
                         }}
                         className={styles.cancelButton}
-                        disabled={isLoading}
+                        disabled={isLoading || isLoadingVerifyPayment}
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleConfirmStatus}
                         className={styles.confirmButton}
-                        disabled={isLoading || !isAgreed}
+                        disabled={isLoading || isLoadingVerifyPayment || !isAgreed}
                       >
-                        {isLoading ? 'Processing...' : status === 'approve' ? 'Proceed to Payment' : 'Confirm'}
+                        {isLoading || isLoadingVerifyPayment ? 'Processing...' : status === 'approve' && checkPaymentForAlert ? 'Proceed to Payment' : 'Confirm'}
                       </button>
                     </div>
                   </div>
                 </div>
+                ) : (<></>)
+                }
+                </>
               )}
 
               <div className={styles.jobDetails}>
