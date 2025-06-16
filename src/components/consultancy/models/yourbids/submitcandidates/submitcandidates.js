@@ -431,6 +431,7 @@ export default function SubmitCandidates({ bidId }) {
                               {formatDate(resume.created_at)}
                             </span>
                           </div>
+                          <span className="text-danger small" style={{ fontSize: '12px' }}>{resume?.rejection_reason}</span>
                           <a
                             href={resume.resume}
                             target="_blank"

@@ -42,6 +42,9 @@ const STATUS_OPTIONS = [
   { value: 'phone_screen', label: 'Phone Screen' },
   { value: 'interview', label: 'Interview Scheduled' },
   { value: 'technical_interview', label: 'Technical Interview' },
+  { value: 'l1_interview', label: 'L1 Interview' },
+  { value: 'l2_interview', label: 'L2 Interview' },
+  { value: 'l3_interview', label: 'L3 Interview' },
   { value: 'hr_interview', label: 'HR Interview' },
   { value: 'reference_check', label: 'Reference Check' },
   { value: 'background_check', label: 'Background Check' },
@@ -56,12 +59,16 @@ const STATUS_OPTIONS = [
   { value: 'on_hold', label: 'On Hold' },
 ];
 
+
 export default function ReviewCandidates({ data }) {
   const [isBrowser, setIsBrowser] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [submissions, setSubmissions] = useState([]);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState({});
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [selectedResume, setSelectedResume] = useState(null);
 
   useEffect(() => {
     setIsBrowser(true);
@@ -107,6 +114,30 @@ export default function ReviewCandidates({ data }) {
     }
   };
 
+  const handleStatusChange = (submissionId, resumeId, newStatus) => {
+    if (newStatus === 'rejected') {
+      setSelectedResume({ submissionId, resumeId });
+      setShowRejectionModal(true);
+    } else {
+      handleStatusUpdate(submissionId, resumeId, newStatus);
+    }
+  };
+
+  const handleRejectionSubmit = () => {
+    if (!rejectionReason[selectedResume.resumeId]?.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+    
+    handleStatusUpdate(
+      selectedResume.submissionId,
+      selectedResume.resumeId,
+      'rejected'
+    );
+    setShowRejectionModal(false);
+    setSelectedResume(null);
+  };
+
   const handleStatusUpdate = async (submissionId, resumeId, newStatus) => {
     try {
       setUpdatingStatus(resumeId);
@@ -118,7 +149,10 @@ export default function ReviewCandidates({ data }) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Cookies.get('access_token')}`
           },
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({ 
+            status: newStatus,
+            rejection_reason: newStatus === 'rejected' ? rejectionReason[resumeId] : null
+          })
         }
       );
 
@@ -134,7 +168,11 @@ export default function ReviewCandidates({ data }) {
               ...submission,
               resumes: submission.resumes.map(resume => 
                 resume.id === resumeId 
-                  ? { ...resume, status: newStatus }
+                  ? { 
+                      ...resume, 
+                      status: newStatus,
+                      rejection_reason: newStatus === 'rejected' ? rejectionReason[resumeId] : null
+                    }
                   : resume
               )
             };
@@ -142,6 +180,15 @@ export default function ReviewCandidates({ data }) {
           return submission;
         })
       );
+
+      // Clear rejection reason after successful update
+      if (newStatus === 'rejected') {
+        setRejectionReason(prev => {
+          const newState = { ...prev };
+          delete newState[resumeId];
+          return newState;
+        });
+      }
 
       toast.success('Status updated successfully');
     } catch (error) {
@@ -237,10 +284,11 @@ export default function ReviewCandidates({ data }) {
                                   {resume.status.replace('_', ' ')}
                                 </span>
                               </div>
-                              <div className={styles.resumeActions}>
+                              <span className="text-danger small" style={{ fontSize: '12px' }}>{resume?.rejection_reason}</span>
+                              <div className={`${styles.resumeActions} mt-2`}>
                                 <select
                                   value={resume.status}
-                                  onChange={(e) => handleStatusUpdate(submission.id, resume.id, e.target.value)}
+                                  onChange={(e) => handleStatusChange(submission.id, resume.id, e.target.value)}
                                   className={styles.statusSelect}
                                   disabled={updatingStatus === resume.id}
                                 >
@@ -277,6 +325,56 @@ export default function ReviewCandidates({ data }) {
             </motion.div>
           )}
         </AnimatePresence>
+      </Modal>
+
+      {/* Rejection Reason Modal */}
+      <Modal
+        isOpen={showRejectionModal}
+        onRequestClose={() => {
+          setShowRejectionModal(false);
+          setSelectedResume(null);
+        }}
+        style={{
+          ...customStyles,
+          content: {
+            ...customStyles.content,
+            maxWidth: '500px',
+          }
+        }}
+        contentLabel="Rejection Reason"
+      >
+        <div className={styles.rejectionModal}>
+          <h3>Rejection Reason</h3>
+          <p>Please provide a reason for rejecting this candidate:</p>
+          <textarea
+            value={rejectionReason[selectedResume?.resumeId] || ''}
+            onChange={(e) => setRejectionReason(prev => ({
+              ...prev,
+              [selectedResume.resumeId]: e.target.value
+            }))}
+            className={styles.rejectionTextarea}
+            placeholder="Enter reason for rejection..."
+            required
+          />
+          <div className={styles.rejectionModalActions}>
+            <button
+              onClick={() => {
+                setShowRejectionModal(false);
+                setSelectedResume(null);
+              }}
+              className={styles.cancelButton}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRejectionSubmit}
+              className={styles.submitButton}
+              disabled={!rejectionReason[selectedResume?.resumeId]?.trim()}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
       </Modal>
     </>
   );

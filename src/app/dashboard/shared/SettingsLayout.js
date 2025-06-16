@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import ChangePasswd from './changepasswd/ChangePasswd';
 import DeleteAccountModal from './deleteaccount/DeleteAccountModel';
 import EmailPreferencesModal from './emailpreferences/EmailPreferencesModal';
+import Transaction from '@/components/employer/models/transaction/Transaction';
 
 
 
@@ -19,6 +20,7 @@ const SettingsLayout = ({ userType='employer' }) => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
   const [isEmailPreferencesModalOpen, setIsEmailPreferencesModalOpen] = useState(false);
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
 
   const settingsSections = [
     {
@@ -47,7 +49,7 @@ const SettingsLayout = ({ userType='employer' }) => {
       icon: FiCreditCard,
       items: [
         { icon: FiCreditCard, label: "Payment Methods", onClick: () => {} },
-        { icon: FiFileText, label: "Billing History", onClick: () => {} },
+        { icon: FiFileText, label: "Billing History", onClick: () => setIsTransactionModalOpen(true) },
         { icon: FiSettings, label: "Subscription Plan", onClick: () => {} },
       ]
     },
@@ -166,6 +168,10 @@ const SettingsLayout = ({ userType='employer' }) => {
       <EmailPreferencesModal 
         isOpen={isEmailPreferencesModalOpen} 
         onClose={() => setIsEmailPreferencesModalOpen(false)} 
+      />
+      <Transaction
+        isOpen={isTransactionModalOpen}
+        onClose={() => setIsTransactionModalOpen(false)}
       />
     </>
   );
