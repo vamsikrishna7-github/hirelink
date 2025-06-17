@@ -12,6 +12,7 @@ import ChangePasswd from './changepasswd/ChangePasswd';
 import DeleteAccountModal from './deleteaccount/DeleteAccountModel';
 import EmailPreferencesModal from './emailpreferences/EmailPreferencesModal';
 import Transaction from '@/components/employer/models/transaction/Transaction';
+import Plans from '@/components/employer/models/plans/Plans';
 
 
 
@@ -21,6 +22,8 @@ const SettingsLayout = ({ userType='employer' }) => {
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
   const [isEmailPreferencesModalOpen, setIsEmailPreferencesModalOpen] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const currentPlanId = 7; // Replace with actual current plan ID from your user data
 
   const settingsSections = [
     {
@@ -50,7 +53,7 @@ const SettingsLayout = ({ userType='employer' }) => {
       items: [
         { icon: FiCreditCard, label: "Payment Methods", onClick: () => {} },
         { icon: FiFileText, label: "Billing History", onClick: () => setIsTransactionModalOpen(true) },
-        { icon: FiSettings, label: "Subscription Plan", onClick: () => {} },
+        { icon: FiSettings, label: "Subscription Plan", onClick: () => setIsPlansModalOpen(true) },
       ]
     },
     {
@@ -172,6 +175,12 @@ const SettingsLayout = ({ userType='employer' }) => {
       <Transaction
         isOpen={isTransactionModalOpen}
         onClose={() => setIsTransactionModalOpen(false)}
+      />
+      <Plans 
+        isOpen={isPlansModalOpen}
+        onClose={() => setIsPlansModalOpen(false)}
+        userType={userType}
+        currentPlanId={currentPlanId}
       />
     </>
   );
