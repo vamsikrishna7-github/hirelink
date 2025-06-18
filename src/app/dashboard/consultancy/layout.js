@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import { useEffect, useState, useContext } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FiHome, FiUser, FiSettings, FiHelpCircle, FiLogOut} from 'react-icons/fi';
-import { FaGavel, FaClipboardList, FaBriefcase } from 'react-icons/fa';
+import { FaGavel, FaClipboardList, FaBriefcase, FaCrown, FaGem } from 'react-icons/fa';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import TopNavbar from "@/components/consultancy/TopNavbar";
 import DashboardSidebar from "@/components/consultancy/DashboardSidebar";
@@ -12,6 +12,19 @@ import { usePathname } from "next/navigation";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 import Cookies from 'js-cookie';
 import { ProfileContext } from "@/context/shared/Profile";
+
+import {
+  Star,         // For premium plans
+  WorkspacePremium,  // For premium features
+  AutoRenew,    // For auto-renewal
+  CalendarToday, // For billing cycles
+  Payment,      // For payments
+  CreditCard,   // For card payments
+  Receipt,      // For invoices
+  Discount,     // For discounts
+  GppGood,      // For security
+  CheckCircle   // For included features
+} from '@mui/icons-material';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -43,6 +56,7 @@ export default function DashboardLayout({ children }) {
     { icon: <FaClipboardList />, label: "Your Bids", link: "/dashboard/consultancy/your-bids", active: pathname === "/dashboard/consultancy/your-bids" },
     { icon: <FaBriefcase />, label: "Job Listings", link: "/dashboard/consultancy/job-listing", active: pathname === "/dashboard/consultancy/job-listing" },
     { icon: <FiUser />, label: "My Profile", link: "/dashboard/consultancy/my-profile", active: pathname === "/dashboard/consultancy/my-profile" },
+    { icon: <FaGem />, label: "Plan Usage", link: "/dashboard/consultancy/plan-usage", active: pathname === "/dashboard/consultancy/plan-usage" },
   ];
 
   const footerItems = [

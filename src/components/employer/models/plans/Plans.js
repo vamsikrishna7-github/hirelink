@@ -18,17 +18,45 @@ import {
   FiTarget,
   FiClock
 } from 'react-icons/fi';
+import { FaCheckCircle } from 'react-icons/fa'
 import axios from 'axios';
 import { Spinner } from 'react-bootstrap';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
-
-
+import { initializeRazorpay } from '@/utils/razorpay';
 
 // Set the app element to the root div
 if (typeof window !== 'undefined') {
   Modal.setAppElement('body');
 }
+
+// Custom modal styles
+const customStyles = {
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    zIndex: 1000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    padding: 0,
+    border: 'none',
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+    background: 'white',
+  },
+};
 
 const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
   const [plans, setPlans] = useState([]);
@@ -37,6 +65,9 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
   const [processing, setProcessing] = useState(false);
   const [processingPlanId, setProcessingPlanId] = useState(null);
   const [userSubscription, setUserSubscription] = useState(null);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [isLoadingVerifyPayment, setIsLoadingVerifyPayment] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -81,40 +112,110 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
     fetchUserSubscription();
   }, []);
 
-  const handleSelectPlan = async (planId) => {
+  const initializePayment = async (planId, planPrice) => {
     try {
       setProcessing(true);
       setProcessingPlanId(planId);
       setError(null);
 
+      if (parseInt(planPrice) === 0) {
+        setShowSupportModal(true);
+        setProcessing(false);
+        setProcessingPlanId(null);
+        return;
+      }
+
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscribe/create/`,
-        { plan: planId },
+        `${process.env.NEXT_PUBLIC_API_URL}/api/subscribe/create-payment/`,
+        { plan_id: planId },
         {
           headers: {
             'Authorization': `Bearer ${Cookies.get('access_token')}`
           }
         }
       );
-      
-      if (response.data) {
-        // Fetch the updated subscription
-        const subscriptionResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/subscribe/`,
-          {
-            headers: {
-              'Authorization': `Bearer ${Cookies.get('access_token')}`
-            }
-          }
-        );
-        setUserSubscription(subscriptionResponse.data);
-        toast.success('Subscription updated successfully');
-        onClose();
+
+      if (!response.data) {
+        throw new Error('Failed to create payment order');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to create subscription. Please try again.';
-      toast.error(errorMessage);
-      setError(errorMessage);
+
+      const paymentData = response.data;
+      setPaymentDetails(paymentData);
+
+      // Initialize Razorpay
+      const Razorpay = await initializeRazorpay();
+      if (!Razorpay) {
+        throw new Error('Razorpay SDK failed to load');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        name: 'HireLink',
+        description: 'Subscription Payment',
+        order_id: paymentData.order_id,
+        handler: async function (response) {
+          try {
+            setIsLoadingVerifyPayment(true);
+            // Verify payment using the paymentData from closure
+            const verifyResponse = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/subscribe/verify-payment/`,
+              {
+                payment_id: paymentData.payment_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${Cookies.get('access_token')}`
+                }
+              }
+            );
+
+            if (verifyResponse.data.status === 'success') {
+              toast.success(verifyResponse.data.message);
+              // Fetch updated subscription
+              const subscriptionResponse = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/subscribe/`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${Cookies.get('access_token')}`
+                  }
+                }
+              );
+              setUserSubscription(subscriptionResponse.data);
+              // onClose();
+            }
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast.error(error.response?.data?.error || 'Payment verification failed. Please try again.');
+          } finally {
+            setIsLoadingVerifyPayment(false);
+          }
+        },
+        prefill: {
+          name: userSubscription?.user?.name || '',
+          email: userSubscription?.user?.email || '',
+          contact: userSubscription?.user?.phone || ''
+        },
+        theme: {
+          color: '#2563eb'
+        },
+        modal: {
+          ondismiss: function() {
+            toast.info('Payment cancelled');
+          }
+        }
+      };
+
+      const razorpay = new Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Error initializing payment:', error);
+      toast.error(error.response?.data?.error || 'Failed to initialize payment. Please try again.');
+      setError(error.response?.data?.error || 'Failed to initialize payment. Please try again.');
     } finally {
       setProcessing(false);
       setProcessingPlanId(null);
@@ -206,8 +307,8 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={onClose}
-        className={styles.modalContent}
-        overlayClassName={styles.modalOverlay}
+        style={customStyles}
+        contentLabel="Loading Plans"
       >
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
           <Spinner animation="border" role="status" variant="primary" />
@@ -221,8 +322,8 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
       <Modal
         isOpen={isOpen}
         onRequestClose={onClose}
-        className={styles.modalContent}
-        overlayClassName={styles.modalOverlay}
+        style={customStyles}
+        contentLabel="Error"
       >
         <div className="text-center text-danger py-4">
           <p className="mb-0">{error}</p>
@@ -238,89 +339,123 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
-      className={styles.modalContent}
-      overlayClassName={styles.modalOverlay}
-      closeTimeoutMS={200}
-    >
-      <button className={styles.closeButton} onClick={onClose} aria-label="Close">
-        <FiX />
-      </button>
-      
-      <h2 className={styles.modalTitle}>
-        <FiCreditCard className={styles.titleIcon} />
-        {userSubscription?.has_subscription ? 'Upgrade Your Plan' : 'Choose Your Plan'}
-      </h2>
-      <div className={styles.plansContainer}>
-        {plans.map((plan) => {
-          const isCurrentPlan = userSubscription?.has_subscription && userSubscription.plan === plan.id;
-          const isUpgrade = userSubscription?.has_subscription && plan.price > plans.find(p => p.id === userSubscription.plan)?.price;
-          const isProcessing = processingPlanId === plan.id;
-          
-          return (
-            <div
-              key={plan.id}
-              className={`${styles.planCard} ${
-                isCurrentPlan ? styles.currentPlan : ''
-              } ${isPopularPlan(plan) ? styles.popularPlan : ''}`}
-            >
-              {isPopularPlan(plan) && (
-                <div className={styles.popularBadge}>
-                  <FiStar />
-                  Most Popular
-                </div>
-              )}
-              <h3 className={styles.planName}>
-                {getPlanIcon(plan.name)}
-                {plan.name}
-              </h3>
-              <div className={styles.planPrice}>
-                {formatPrice(plan.price, plan.currency)}
-                <span className={styles.pricePeriod}>/month</span>
-              </div>
-              <ul className={styles.planDescription}>
-                {renderDescriptionItems(plan.description)}
-              </ul>
-              <button
-                className={styles.selectButton}
-                onClick={() => handleSelectPlan(plan.id)}
-                disabled={isCurrentPlan || processing}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={onClose}
+        className={styles.modalContent}
+        overlayClassName={styles.modalOverlay}
+        // style={customStyles}
+        contentLabel="Subscription Plans"
+        closeTimeoutMS={200}
+      >
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close">
+          <FiX />
+        </button>
+        
+        <h2 className={styles.modalTitle}>
+          <FiCreditCard className={styles.titleIcon} />
+          {userSubscription?.has_subscription ? 'Upgrade Your Plan' : 'Choose Your Plan'}
+        </h2>
+        <div className={styles.plansContainer}>
+          {plans.map((plan) => {
+            const isCurrentPlan = userSubscription?.has_subscription && userSubscription.plan === plan.id;
+            const isUpgrade = userSubscription?.has_subscription && plan.price > plans.find(p => p.id === userSubscription.plan)?.price;
+            const isProcessing = processingPlanId === plan.id;
+            
+            return (
+              <div
+                key={plan.id}
+                className={`${styles.planCard} ${
+                  isCurrentPlan ? styles.currentPlan : ''
+                } ${isPopularPlan(plan) ? styles.popularPlan : ''}`}
               >
-                {isProcessing ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {plan.currency === 'INR' ? "₹ " : <FiDollarSign />}
-                    {isCurrentPlan 
-                      ? 'Current Plan' 
-                      : isUpgrade 
-                        ? 'Upgrade Plan' 
-                        : 'Select Plan'
-                    }
-                  </>
+                {isPopularPlan(plan) && (
+                  <div className={styles.popularBadge}>
+                    <FiStar />
+                    Most Popular
+                  </div>
                 )}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-      {error && (
-        <div className="text-center text-danger mt-3">
-          <p className="mb-0">{error}</p>
-          <button 
-            className="btn btn-link mt-2" 
-            onClick={() => setError(null)}
-          >
-            Try Again
-          </button>
+                <h3 className={styles.planName}>
+                  {getPlanIcon(plan.name)}
+                  {plan.name}
+                </h3>
+                <div className={styles.planPrice}>
+                  {parseInt(plan.price) !== 0 ? (formatPrice(plan.price, plan.currency)) : 'Custom'}
+                  <span className={styles.pricePeriod}>/month</span>
+                </div>
+                <ul className={styles.planDescription}>
+                  {renderDescriptionItems(plan.description)}
+                </ul>
+                <button
+                  className={styles.selectButton}
+                  onClick={() => initializePayment(plan.id, plan.price)}
+                  disabled={isCurrentPlan || processing || isLoadingVerifyPayment}
+                >
+                  {isProcessing || isLoadingVerifyPayment ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {plan.currency === 'INR' ? "₹ " : <FiDollarSign />}
+                      {isCurrentPlan 
+                        ? 'Current Plan' 
+                        : isUpgrade 
+                          ? 'Upgrade Plan' 
+                          : 'Select Plan'
+                      }
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
-      )}
-    </Modal>
+      </Modal>
+
+      <Modal
+        isOpen={showSupportModal}
+        onRequestClose={() => setShowSupportModal(false)}
+        style={customStyles}
+        contentLabel="Contact Support"
+        closeTimeoutMS={200}
+      >
+        <button
+          className={styles.closeButton}
+          onClick={() => setShowSupportModal(false)}
+          aria-label="Close"
+        >
+          <FiX />
+        </button>
+
+        <div className="text-center py-4 px-3">
+          <h3 className="mb-3">Contact Zyukthi Support</h3>
+          <p className="mb-4">For more information and personalized proposals, please contact our sales team.</p>
+
+          <div className="border rounded p-4 bg-light text-start mx-auto" style={{ maxWidth: '400px' }}>
+            <h5 className="text-primary mb-3"><FiAward /> Custom Plan</h5>
+            <p className="fw-bold mb-1">Custom Pricing / month</p>
+            <ul className="list-unstyled mb-3">
+              <li><FaCheckCircle color="green" className="me-2" /> Job Posts: <strong>Unlimited</strong></li>
+              <li><FaCheckCircle color="green" className="me-2" /> Priority Support: <strong>Yes</strong></li>
+              <li><FaCheckCircle color="green" className="me-2" /> Dedicated Account Manager: <strong>Yes</strong></li>
+              <li><FaCheckCircle color="green" className="me-2" /> Custom Feature Requests: <strong>Available</strong></li>
+              <li><FaCheckCircle color="green" className="me-2" /> API Access & Integration Support: <strong>Included</strong></li>
+            </ul>
+            <p className="small text-muted">Get a tailored solution based on your business needs.</p>
+          </div>
+
+          <a
+            href="mailto:sales@zyukthi.com"
+            className="btn btn-primary mt-4"
+          >
+            📧 Contact Sales: sales@zyukthi.com
+          </a>
+        </div>
+      </Modal>
+    </>
   );
 };
 

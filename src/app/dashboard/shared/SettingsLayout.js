@@ -7,6 +7,8 @@ import {
   FiShield, FiKey, FiTrash2, FiFileText, FiHelpCircle,
   FiBell, FiMail, FiGlobe, FiCreditCard
 } from 'react-icons/fi';
+import { FaCreditCard, FaMoneyBillWave } from 'react-icons/fa';
+import { BsCurrencyExchange } from 'react-icons/bs';
 import { useRouter } from 'next/navigation';
 import ChangePasswd from './changepasswd/ChangePasswd';
 import DeleteAccountModal from './deleteaccount/DeleteAccountModel';
@@ -52,8 +54,8 @@ const SettingsLayout = ({ userType='employer' }) => {
       icon: FiCreditCard,
       items: [
         { icon: FiCreditCard, label: "Payment Methods", onClick: () => {} },
-        { icon: FiFileText, label: "Billing History", onClick: () => setIsTransactionModalOpen(true) },
-        { icon: FiSettings, label: "Subscription Plan", onClick: () => setIsPlansModalOpen(true) },
+        { icon: BsCurrencyExchange, label: "Billing History", onClick: () => setIsTransactionModalOpen(true) },
+        { icon: FaCreditCard, label: "Subscription Plans", onClick: () => setIsPlansModalOpen(true) },
       ]
     },
     {

@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import { useEffect, useState, useContext } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FiHome, FiBriefcase, FiBookmark, FiSearch, FiFileText, FiUser, FiSettings, FiHelpCircle, FiLogOut, FiCheckCircle, FiXCircle, FiClock, FiCalendar, FiUsers } from 'react-icons/fi';
+import { FaGem } from "react-icons/fa";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import TopNavbar from "@/components/employer/TopNavbar";
 import DashboardSidebar from "@/components/employer/DashboardSidebar";
@@ -49,6 +50,7 @@ export default function DashboardLayout({ children }) {
     { icon: <FiFileText />, label: "Posted Jobs", link: "/dashboard/employer/posted-jobs", active: pathname === "/dashboard/employer/posted-jobs" },
     { icon: <HiOutlineCurrencyDollar  />, label: "Recived Bids", link: "/dashboard/employer/recived-bids", active: pathname === "/dashboard/employer/recived-bids" },
     { icon: <FiUser />, label: "My Profile", link: "/dashboard/employer/my-profile", active: pathname === "/dashboard/employer/my-profile" },
+    { icon: <FaGem />, label: "Plan Usage", link: "/dashboard/employer/plan-usage", active: pathname === "/dashboard/employer/plan-usage" },
   ];
 
   const footerItems = [
