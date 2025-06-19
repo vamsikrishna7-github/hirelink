@@ -3,5 +3,5 @@
 import PlanUsage from '@/components/shared/PlanUsage';
 
 export default function EmployerPlanUsage() {
-  return <PlanUsage />;
+  return <PlanUsage userType='employer'/>;
 } 

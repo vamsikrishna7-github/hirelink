@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { FiAlertCircle, FiCheckCircle, FiBriefcase, FiUsers, FiDatabase, FiStar, FiHeadphones, FiUserCheck, FiBarChart2 } from 'react-icons/fi';
 import styles from './PlanUsage.module.css';
 import axios from 'axios';
@@ -7,15 +7,18 @@ import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { Spinner } from 'react-bootstrap';
 import Plans from '@/components/employer/models/plans/Plans';
+import { PlanContext } from '@/context/shared/Plan';
+
 
 
 
 const PlanUsage = ({ userType='employer' }) => {
-  const [subscription, setSubscription] = useState(null);
+  const {userSubscription, setUserSubscription} = useContext(PlanContext);
+
   const [loading, setLoading] = useState(true);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
-  const currentPlanId =7;
+  const [currentPlanId, setCurrentPlanId] = useState(7);
 
 
   useEffect(() => {
@@ -29,7 +32,7 @@ const PlanUsage = ({ userType='employer' }) => {
             headers: { 'Authorization': `Bearer ${Cookies.get('access_token')}` }
           })
         ]);
-        setSubscription(subscriptionRes.data);
+        setUserSubscription(subscriptionRes.data);
         setAvailablePlans(plansRes.data);
         setLoading(false);
       } catch (error) {
@@ -50,14 +53,14 @@ const PlanUsage = ({ userType='employer' }) => {
     );
   }
 
-  if (!subscription?.has_subscription) {
+  if (!userSubscription?.has_subscription) {
     return (
       <div className={styles.noSubscription}>
         <FiAlertCircle size={48} className="text-warning mb-3" />
         <h3>No Active Subscription</h3>
         <p>You don&apos;t have an active subscription plan.</p>
         <button 
-          className="btn btn-primary mt-3"
+          className={`${styles.btn} btn btn-primary mt-3`}
           onClick={() => setIsPlansModalOpen(true)}
         >
           View Plans
@@ -68,7 +71,7 @@ const PlanUsage = ({ userType='employer' }) => {
 
   const calculateUsagePercentage = (used, limit) => {
     if (limit === 0 || limit === 'unlimited') return 0;
-    return Math.min(100, (used / limit) * 100);
+    return Math.min(100, ((limit-used) / limit) * 100);
   };
 
   const getUsageColor = (percentage) => {
@@ -146,7 +149,7 @@ const PlanUsage = ({ userType='employer' }) => {
             Active Subscription
           </span>
           <span className={styles.validity}>
-            Valid until {formatDate(subscription.end_date)}
+            Valid until {formatDate(userSubscription.end_date)}
           </span>
         </div>
       </div>
@@ -163,15 +166,15 @@ const PlanUsage = ({ userType='employer' }) => {
               className={styles.progressBar}
               initial={{ width: 0 }}
               animate={{ 
-                width: `${calculateUsagePercentage(subscription.job_limit, subscription.plan.description.job_posts)}%`,
-                backgroundColor: getUsageColor(calculateUsagePercentage(subscription.job_limit, subscription.plan.description.job_posts))
+                width: `${calculateUsagePercentage(userSubscription.job_limit, userSubscription.plan.description.job_posts)}%`,
+                backgroundColor: getUsageColor(calculateUsagePercentage(userSubscription.job_limit, userSubscription.plan.description.job_posts))
               }}
               transition={{ duration: 1, ease: "easeOut" }}
             />
           </div>
           <div className={styles.usageDetails}>
             {(() => {
-              const stats = getUsageStats(subscription.job_limit, subscription.plan.description.job_posts);
+              const stats = getUsageStats(userSubscription.job_limit, userSubscription.plan.description.job_posts);
               return (
                 <>
                   <span><strong>{stats.used}</strong> used</span>
@@ -193,15 +196,15 @@ const PlanUsage = ({ userType='employer' }) => {
               className={styles.progressBar}
               initial={{ width: 0 }}
               animate={{ 
-                width: `${calculateUsagePercentage(subscription.bid_limit, subscription.plan.description.consultancy_bids)}%`,
-                backgroundColor: getUsageColor(calculateUsagePercentage(subscription.bid_limit, subscription.plan.description.consultancy_bids))
+                width: `${calculateUsagePercentage(userSubscription.bid_limit, userSubscription.plan.description.consultancy_bids)}%`,
+                backgroundColor: getUsageColor(calculateUsagePercentage(userSubscription.bid_limit, userSubscription.plan.description.consultancy_bids))
               }}
               transition={{ duration: 1, ease: "easeOut" }}
             />
           </div>
           <div className={styles.usageDetails}>
             {(() => {
-              const stats = getUsageStats(subscription.bid_limit, subscription.plan.description.consultancy_bids);
+              const stats = getUsageStats(userSubscription.bid_limit, userSubscription.plan.description.consultancy_bids);
               return (
                 <>
                   <span><strong>{stats.used}</strong> used</span>
@@ -214,32 +217,32 @@ const PlanUsage = ({ userType='employer' }) => {
       </div>
 
       <div className={styles.subscriptionDetails}>
-        <h3>Current Plan: <strong>{subscription.plan.name}</strong></h3>
+        <h3>Current Plan: <strong>{userSubscription.plan.name}</strong></h3>
         <div className={styles.detailsGrid}>
           <div className={styles.detailItem}>
             <span className={styles.label}>Start Date</span>
-            <span className={styles.value}>{formatDate(subscription.start_date)}</span>
+            <span className={styles.value}>{formatDate(userSubscription.start_date)}</span>
           </div>
           <div className={styles.detailItem}>
             <span className={styles.label}>End Date</span>
-            <span className={styles.value}>{formatDate(subscription.end_date)}</span>
+            <span className={styles.value}>{formatDate(userSubscription.end_date)}</span>
           </div>
           <div className={styles.detailItem}>
             <span className={styles.label}>Status</span>
             <span className={`${styles.value} ${styles.status}`}>
-              {subscription.active ? 'Active' : 'Inactive'}
+              {userSubscription.active ? 'Active' : 'Inactive'}
             </span>
           </div>
           <div className={styles.detailItem}>
             <span className={styles.label}>Price</span>
-            <span className={styles.value}>{subscription.plan.currency === "INR" ? "₹ " : "$ "} {subscription.plan.price}</span>
+            <span className={styles.value}>{userSubscription.plan.currency === "INR" ? "₹ " : "$ "} {userSubscription.plan.price}</span>
           </div>
         </div>
 
         <div className={styles.features}>
           <h4>Plan Features</h4>
           <div className={styles.featuresGrid}>
-            {Object.entries(subscription.plan.description).map(([feature, value]) => (
+            {Object.entries(userSubscription.plan.description).map(([feature, value]) => (
               <motion.div
                 key={feature}
                 initial={{ opacity: 0, x: -20 }}
@@ -256,7 +259,7 @@ const PlanUsage = ({ userType='employer' }) => {
           <h4>Available Plans</h4>
           <div className={styles.plansGrid}>
             {availablePlans
-              .filter(plan => plan.user_type === subscription.plan.user_type && plan.id !== subscription.plan.id)
+              .filter(plan => plan.user_type === userSubscription.plan.user_type && plan.id !== userSubscription.plan.id)
               .map(plan => (
                 <motion.div
                   key={plan.id}
@@ -269,11 +272,10 @@ const PlanUsage = ({ userType='employer' }) => {
                     {plan.currency === "INR" ? "₹ " : "$ "} {parseInt(plan.price) === 0 ? "Custom" : plan.price}
                   </div>
                   <button
-                    className="btn btn-outline-primary mt-3"
-                    style={color="green"}
+                    className={`${styles.btn} btn btn-outline-primary mt-3`}
                     onClick={() => setIsPlansModalOpen(true)}
                   >
-                   {parseInt(plan.price) > parseInt(subscription.plan.price) ? "Upgrade to " + plan.name : "Switch to " + plan.name} 
+                   {parseInt(plan.price) > parseInt(userSubscription.plan.price) ? "Upgrade to " + plan.name : "Switch to " + plan.name} 
                   </button>
                 </motion.div>
               ))}

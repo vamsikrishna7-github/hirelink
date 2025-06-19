@@ -201,6 +201,15 @@
   margin-bottom: 1rem;
 }
 
+.btn {
+  color: #2196f3;
+  border-color: #2196f3;
+}
+.btn:hover {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
+
 .noSubscription {
   text-align: center;
   padding: 3rem 1rem;

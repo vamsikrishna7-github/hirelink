@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Modal from 'react-modal';
 import styles from './page.module.css';
 import { 
@@ -16,7 +16,10 @@ import {
   FiUserCheck,
   FiBarChart2,
   FiTarget,
-  FiClock
+  FiClock,
+  FiAlertCircle,
+  FiMail,
+  FiRefreshCw
 } from 'react-icons/fi';
 import { FaCheckCircle } from 'react-icons/fa'
 import axios from 'axios';
@@ -24,6 +27,8 @@ import { Spinner } from 'react-bootstrap';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { initializeRazorpay } from '@/utils/razorpay';
+import { PlanContext } from '@/context/shared/Plan';
+
 
 // Set the app element to the root div
 if (typeof window !== 'undefined') {
@@ -64,10 +69,12 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [processingPlanId, setProcessingPlanId] = useState(null);
-  const [userSubscription, setUserSubscription] = useState(null);
+  const {userSubscription, setUserSubscription} = useContext(PlanContext);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [isLoadingVerifyPayment, setIsLoadingVerifyPayment] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [showPaymentFailedModal, setShowPaymentFailedModal] = useState(false);
+  const [paymentFailedDetails, setPaymentFailedDetails] = useState(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -191,6 +198,20 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
           } catch (error) {
             console.error('Payment verification failed:', error);
             toast.error(error.response?.data?.error || 'Payment verification failed. Please try again.');
+            
+            // Set payment failed details and show modal
+            setPaymentFailedDetails({
+              message: error.response?.data?.error || 'Payment verification failed. Please try again.',
+              order_id: paymentData.order_id,
+              payment_id: paymentData.payment_id,
+              amount: paymentData.amount,
+              currency: paymentData.currency,
+              email: userSubscription?.user?.email || '',
+              contact: userSubscription?.user?.phone || '',
+              error_code: error.response?.data?.error_code || 'UNKNOWN_ERROR',
+              timestamp: new Date().toISOString()
+            });
+            setShowPaymentFailedModal(true);
           } finally {
             setIsLoadingVerifyPayment(false);
           }
@@ -311,7 +332,7 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
         contentLabel="Loading Plans"
       >
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <Spinner animation="border" role="status" variant="primary" />
+          <Spinner animation="border" role="status" className={`${['text-primary', 'text-white', 'text-success', 'text-danger', 'text-warning', 'text-info'][Math.floor(Math.random() * 6)]}`} />
         </div>
       </Modal>
     );
@@ -359,7 +380,7 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
         </h2>
         <div className={styles.plansContainer}>
           {plans.map((plan) => {
-            const isCurrentPlan = userSubscription?.has_subscription && userSubscription.plan === plan.id;
+            const isCurrentPlan = userSubscription?.has_subscription && userSubscription.plan.id === plan.id;
             const isUpgrade = userSubscription?.has_subscription && plan.price > plans.find(p => p.id === userSubscription.plan)?.price;
             const isProcessing = processingPlanId === plan.id;
             
@@ -453,6 +474,100 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
           >
             📧 Contact Sales: sales@zyukthi.com
           </a>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showPaymentFailedModal}
+        onRequestClose={() => setShowPaymentFailedModal(false)}
+        style={customStyles}
+        contentLabel="Payment Failed"
+        closeTimeoutMS={200}
+      >
+        <button
+          className={styles.closeButton}
+          onClick={() => setShowPaymentFailedModal(false)}
+          aria-label="Close"
+        >
+          <FiX />
+        </button>
+
+        <div className="text-center py-4 px-3">
+          <div className="mb-4">
+            <FiAlertCircle size={48} className="text-danger mb-3" />
+            <h3 className="text-danger mb-2">Payment Failed</h3>
+            <p className="text-muted mb-3">{paymentFailedDetails?.message}</p>
+          </div>
+
+          <div className="alert alert-info mb-4">
+            <div className="d-flex align-items-center">
+              <FiMail className="me-2" />
+              <div>
+                <strong>Check your email for updates!</strong>
+                <p className="mb-0 small">We&apos; ve sent you an email with payment details and next steps. Please check your inbox and spam folder.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded p-4 bg-light text-start mx-auto mb-4" style={{ maxWidth: '500px' }}>
+            <h5 className="text-primary mb-3">
+              <FiCreditCard className="me-2" />
+              Transaction Details
+            </h5>
+            <div className="row">
+              <div className="col-md-6">
+                <p className="mb-2"><strong>Order ID:</strong></p>
+                <p className="text-muted small mb-3">{paymentFailedDetails?.order_id}</p>
+                
+                <p className="mb-2"><strong>Payment ID:</strong></p>
+                <p className="text-muted small mb-3">{paymentFailedDetails?.payment_id}</p>
+                
+                <p className="mb-2"><strong>Amount:</strong></p>
+                <p className="text-muted small mb-3">
+                  {paymentFailedDetails?.amount && paymentFailedDetails?.currency 
+                    ? formatPrice(paymentFailedDetails.amount, paymentFailedDetails.currency)
+                    : 'N/A'
+                  }
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-2"><strong>Currency:</strong></p>
+                <p className="text-muted small mb-3">{paymentFailedDetails?.currency}</p>
+                
+                <p className="mb-2"><strong>Email:</strong></p>
+                <p className="text-muted small mb-3">{paymentFailedDetails?.email}</p>
+                
+                <p className="mb-2"><strong>Contact:</strong></p>
+                <p className="text-muted small mb-3">{paymentFailedDetails?.contact}</p>
+              </div>
+            </div>
+            {paymentFailedDetails?.error_code && (
+              <div className="mt-3 pt-3 border-top">
+                <p className="mb-2"><strong>Error Code:</strong></p>
+                <p className="text-danger small mb-0">{paymentFailedDetails.error_code}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
+            <button
+              className="btn btn-outline-primary"
+              onClick={() => {
+                setShowPaymentFailedModal(false);
+                // Retry payment logic can be added here
+              }}
+            >
+              <FiRefreshCw className="me-2" />
+              Try Again
+            </button>
+            <a
+              href={`mailto:support@zyukthi.com?subject=Payment Failed - Order ID: ${paymentFailedDetails?.order_id}`}
+              className="btn btn-primary"
+            >
+              <FiMail className="me-2" />
+              Contact Support
+            </a>
+          </div>
         </div>
       </Modal>
     </>
