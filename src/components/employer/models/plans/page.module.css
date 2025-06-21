@@ -181,6 +181,36 @@
   cursor: not-allowed;
 }
 
+
+
+.renewButton {
+  width: 100%;
+  padding: 0.875rem;
+  margin-top: 1.25rem;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.renewButton:hover:not(:disabled) {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.renewButton:disabled {
+  background-color: #a7f3d0;
+  cursor: not-allowed;
+}
+
 /* .currentPlan {
   border-color: #2563eb;
   position: relative;

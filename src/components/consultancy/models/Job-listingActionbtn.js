@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Modal from "react-modal";
 import styles from "./page.module.css";
 import { FaEye, FaTimes, FaBuilding, FaChevronDown, FaChevronUp, FaHandshake, FaGavel, FaPercent, FaExclamationTriangle } from "react-icons/fa";
@@ -9,8 +9,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
+import CheckPlanUsage from "@/components/shared/CheckPlanUsage";
+import Plans from '@/components/employer/models/plans/Plans';
+import { PlanContext } from '@/context/shared/Plan';
 
-// Custom modal styles
+
+
+
+
 const customStyles = {
   overlay: {
     backgroundColor: "rgba(0, 0, 0, 0.75)",
@@ -50,6 +56,17 @@ export default function PostedJobActions({ data }) {
     fee: null
   });
   const router = useRouter();
+  CheckPlanUsage({type: 'bid'});
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [currentPlanId, setCurrentPlanId] = useState(0);
+  const {userSubscription, setUserSubscription} = useContext(PlanContext);
+  const isPlanUsage = !!(
+      userSubscription &&
+      userSubscription.has_subscription &&
+      parseInt(userSubscription.bid_limit) > 0
+    );
+    
+
 
   useEffect(() => {
     setIsBrowser(true);
@@ -130,7 +147,7 @@ export default function PostedJobActions({ data }) {
             } else if (errorMessage.includes("already submitted this proposal")) {
               toast.error("You have already submitted this exact proposal for this job. Please modify your proposal.");
             } else {
-              toast.error(errorMessage);
+              toast.error(responseData.detail || errorMessage);
             }
             return;
           }
@@ -159,6 +176,11 @@ export default function PostedJobActions({ data }) {
         return;
       }
 
+      setUserSubscription(prev => ({
+        ...prev,
+        bid_limit: parseInt(prev.bid_limit) - 1
+      }));
+      
       toast.success('Bid submitted successfully! Your proposal has been sent to the employer.');
       setShowBidForm(false);
       setBidData({ proposal: '', fee: '' });
@@ -217,15 +239,23 @@ export default function PostedJobActions({ data }) {
               <div className={styles.modalHeader}>
                 <h2 className={styles.heading}>Job Details</h2>
                 <div className={styles.headerActions}>
-                  <motion.button 
-                    onClick={() => setShowBidForm(true)}
-                    className={styles.bidButton}
-                    title="Make a bid"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <FaHandshake className="me-2" /> Make a Bid
-                  </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    if (isPlanUsage) {
+                      setShowBidForm(true);
+                    } else {
+                      setIsPlansModalOpen(true);
+                    }
+                  }}
+                  className={styles.bidButton}
+                  title="Make a bid"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <FaHandshake className="me-2" />
+                  {isPlanUsage ? 'Make a Bid' : 'Upgrade Plan to make a Bid'}
+                </motion.button>
+
                   <motion.button 
                     onClick={handleClose} 
                     className={styles.closeButton}
@@ -253,40 +283,40 @@ export default function PostedJobActions({ data }) {
                   </div>
 
                   <div className={styles.formGroup}>
-  <label>Fee (%)</label>
-  <input
-    type="number"
-    name="fee_percentage"
-    className={`${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'border-danger' : ''}`}
-    value={bidData.fee_percentage || ''}
-    onChange={(e) => {
-      const percentage = parseFloat(e.target.value);
-      setBidData({
-        ...bidData,
-        fee_percentage: percentage,
-        fee: (percentage / 100) * parseInt(data.bid_budget)
-      });
-    }}
-    required
-    min={0}
-    max={100}
-    step="0.01"
-    placeholder="Enter your fee percentage"
-  />
-  {bidData.fee_percentage && !isNaN(bidData.fee_percentage) && !isNaN(bidData.fee) && (
-    <>
-    <p className={styles.amountInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
-      Fee amount: <strong className={`text-success text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
-                                ₹&nbsp;
-                                {parseFloat(bidData.fee).toLocaleString()}
-      </strong>
-    </p>
-          <span className={`text-danger text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
-          {bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? <><FaExclamationTriangle className="me-2" /> Fee must be greater than 50% of the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} and less than the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} or equal to the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()}</> : ''}
-        </span>
-    </>
-  )}
-</div>
+                    <label>Fee (%)</label>
+                    <input
+                      type="number"
+                      name="fee_percentage"
+                      className={`${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'border-danger' : ''}`}
+                      value={bidData.fee_percentage || ''}
+                      onChange={(e) => {
+                        const percentage = parseFloat(e.target.value);
+                        setBidData({
+                          ...bidData,
+                          fee_percentage: percentage,
+                          fee: (percentage / 100) * parseInt(data.bid_budget)
+                        });
+                      }}
+                      required
+                      min={0}
+                      max={100}
+                      step="0.01"
+                      placeholder="Enter your fee percentage"
+                    />
+                    {bidData.fee_percentage && !isNaN(bidData.fee_percentage) && !isNaN(bidData.fee) && (
+                      <>
+                      <p className={styles.amountInfo} style={{ marginTop: 8, color: '#888', fontSize: 13 }}>
+                        Fee amount: <strong className={`text-success text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
+                                                  ₹&nbsp;
+                                                  {parseFloat(bidData.fee).toLocaleString()}
+                        </strong>
+                      </p>
+                            <span className={`text-danger text-bold text-lg ${bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? 'text-danger' : ''}`}>
+                            {bidData.fee < data.bid_budget/2 || bidData.fee > data.bid_budget ? <><FaExclamationTriangle className="me-2" /> Fee must be greater than 50% of the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} and less than the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()} or equal to the ₹&nbsp;{parseFloat(data.bid_budget).toLocaleString()}</> : ''}
+                          </span>
+                      </>
+                    )}
+                  </div>
 
                   <div className={styles.formActions}>
                     <button
@@ -406,6 +436,12 @@ export default function PostedJobActions({ data }) {
           )}
         </AnimatePresence>
       </Modal>
+      <Plans 
+        isOpen={isPlansModalOpen}
+        onClose={() => setIsPlansModalOpen(false)}
+        userType={'consultancy'}
+        currentPlanId={currentPlanId}
+      />
     </>
   );
 }

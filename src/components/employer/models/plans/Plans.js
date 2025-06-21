@@ -159,7 +159,7 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: paymentData.amount,
         currency: paymentData.currency,
-        name: 'HireLink',
+        name: 'Zyukthi',
         description: 'Subscription Payment',
         order_id: paymentData.order_id,
         handler: async function (response) {
@@ -409,9 +409,9 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
                   {renderDescriptionItems(plan.description)}
                 </ul>
                 <button
-                  className={styles.selectButton}
+                  className={`${!isCurrentPlan ? styles.selectButton : styles.renewButton}`}
                   onClick={() => initializePayment(plan.id, plan.price)}
-                  disabled={isCurrentPlan || processing || isLoadingVerifyPayment}
+                  disabled={ processing || isLoadingVerifyPayment}
                 >
                   {isProcessing || isLoadingVerifyPayment ? (
                     <>
@@ -422,7 +422,7 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
                     <>
                       {plan.currency === 'INR' ? "₹ " : <FiDollarSign />}
                       {isCurrentPlan 
-                        ? 'Current Plan' 
+                        ? 'Renew Current Plan' 
                         : isUpgrade 
                           ? 'Upgrade Plan' 
                           : 'Select Plan'
@@ -525,7 +525,7 @@ const Plans = ({ isOpen, onClose, userType, currentPlanId }) => {
                 <p className="mb-2"><strong>Amount:</strong></p>
                 <p className="text-muted small mb-3">
                   {paymentFailedDetails?.amount && paymentFailedDetails?.currency 
-                    ? formatPrice(paymentFailedDetails.amount, paymentFailedDetails.currency)
+                    ? formatPrice((paymentFailedDetails.amount / 100).toFixed(2), paymentFailedDetails.currency)
                     : 'N/A'
                   }
                 </p>

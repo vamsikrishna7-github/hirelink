@@ -11,14 +11,13 @@ import { PlanContext } from '@/context/shared/Plan';
 
 
 
-
 const PlanUsage = ({ userType='employer' }) => {
   const {userSubscription, setUserSubscription} = useContext(PlanContext);
 
   const [loading, setLoading] = useState(true);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
-  const [currentPlanId, setCurrentPlanId] = useState(7);
+  const [currentPlanId, setCurrentPlanId] = useState(0);
 
 
   useEffect(() => {
@@ -55,17 +54,25 @@ const PlanUsage = ({ userType='employer' }) => {
 
   if (!userSubscription?.has_subscription) {
     return (
-      <div className={styles.noSubscription}>
-        <FiAlertCircle size={48} className="text-warning mb-3" />
-        <h3>No Active Subscription</h3>
-        <p>You don&apos;t have an active subscription plan.</p>
-        <button 
-          className={`${styles.btn} btn btn-primary mt-3`}
-          onClick={() => setIsPlansModalOpen(true)}
-        >
-          View Plans
-        </button>
-      </div>
+      <>
+        <div className={styles.noSubscription}>
+          <FiAlertCircle size={48} className={`${styles.icon} text-warning mb-3`} />
+          <h3 className={styles.title}>No Active Subscription</h3>
+          <p className={styles.message}>You don&apos;t have an active subscription plan.</p>
+          <button 
+            className={`${styles.btnNO} btn btn-primary mt-3`}
+            onClick={() => setIsPlansModalOpen(true)}
+          >
+            View Plans
+          </button>
+          <Plans 
+            isOpen={isPlansModalOpen}
+            onClose={() => setIsPlansModalOpen(false)}
+            userType={userType}
+            currentPlanId={currentPlanId}
+          />
+        </div>
+      </>
     );
   }
 
@@ -155,6 +162,7 @@ const PlanUsage = ({ userType='employer' }) => {
       </div>
 
       <div className={styles.usageCards}>
+        {userType==='employer'&&
         <motion.div 
           className={styles.usageCard}
           whileHover={{ scale: 1.02 }}
@@ -184,6 +192,7 @@ const PlanUsage = ({ userType='employer' }) => {
             })()}
           </div>
         </motion.div>
+        }
 
         <motion.div 
           className={styles.usageCard}

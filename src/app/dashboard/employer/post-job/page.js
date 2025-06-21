@@ -1,7 +1,7 @@
 'use client'
 import { FiBriefcase, FiMapPin, FiClock, FiAward, FiFileText, FiUserCheck, FiDollarSign, FiCalendar, FiUsers, FiGlobe, FiMail, FiTag } from 'react-icons/fi';
 import styles from './page.module.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { ClipLoader } from 'react-spinners';
@@ -9,6 +9,11 @@ import { toast } from 'react-toastify';
 import { Country, State, City } from "country-state-city";
 import { BiCity } from 'react-icons/bi';
 import { FaCity, FaGlobeAmericas } from 'react-icons/fa';
+import { PlanContext } from '@/context/shared/Plan';
+import CheckPlanUsage from "@/components/shared/CheckPlanUsage";
+import Plans from '@/components/employer/models/plans/Plans';
+
+
 
 export default function PostJob() {
   const router = useRouter();
@@ -41,9 +46,17 @@ export default function PostJob() {
     deadline: '',
     vacancies: 1
   });
+  CheckPlanUsage({type: 'job'});
+  const {userSubscription, setUserSubscription} = useContext(PlanContext);
+  const isPlanUsage = !!(
+    userSubscription &&
+    userSubscription.has_subscription &&
+    parseInt(userSubscription.job_limit) > 0
+  );
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
 
   const [states, setStates] = useState([]);
-const [cities, setCities] = useState([]);
+  const [cities, setCities] = useState([]);
 
 useEffect(() => {
   setStates(State.getStatesOfCountry('IN'));
@@ -75,7 +88,6 @@ useEffect(() => {
         }));
       } catch (error) {
         toast.error('Failed to load company information. Please try again.');
-        console.error('Error fetching company data:', error);
         setError('Failed to load company information. Please try again.');
       } finally {
         setIsLoading(false);
@@ -135,9 +147,6 @@ useEffect(() => {
     setError('');
     
     try {
-      console.log('Submitting job data:', formData);
-      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`);
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/jobs/`, {
         method: 'POST',
         headers: {
@@ -147,24 +156,24 @@ useEffect(() => {
         body: JSON.stringify(formData),
       });
 
-      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        console.error('Error response:', errorData);
-        toast.error(errorData?.message || `HTTP error! status: ${response.status}`);
-        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+        toast.error(errorData?.message || errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData?.message || errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Success response:', data);
+      setUserSubscription(prev => ({
+        ...prev,
+        job_limit: parseInt(prev.job_limit) - 1
+      }));
+      
       toast.success('Job posted successfully!');
       setSuccess(true);
       setCountdown(5);
     } catch (error) {
-      console.error('Error posting job:', error);
       setError(error.message || 'Failed to post job. Please try again.');
-      alert(error.message || 'Failed to post job. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +198,7 @@ useEffect(() => {
   };
 
   return (
+    <>
     <div className="container py-3">
       <div className="row justify-content-center">
         <div className="col-lg-9">
@@ -547,9 +557,14 @@ useEffect(() => {
 
             <div className="d-grid gap-2 mt-5">
               <button 
-                type="submit" 
+                type={(isPlanUsage ? 'submit' : 'button')} 
                 disabled={isSubmitting || success || isLoading}
                 className={`${styles.submitbtn} btn rounded-3 py-3 fw-bold position-relative`}
+                onClick={() => {
+                  if (!isPlanUsage) {
+                    setIsPlansModalOpen(true);
+                  }
+                }}
               >
                 {isLoading ? (
                   <>
@@ -578,7 +593,7 @@ useEffect(() => {
                     Posted Successfully
                   </>
                 ) : (
-                  'Post Job'
+                  isPlanUsage ? 'Post Job' : 'Upgrade Plan'
                 )}
               </button>
             </div>
@@ -586,5 +601,12 @@ useEffect(() => {
         </div>
       </div>
     </div>
+    <Plans 
+        isOpen={isPlansModalOpen}
+        onClose={() => setIsPlansModalOpen(false)}
+        userType={'employer'}
+        currentPlanId={0}
+      />
+    </>
   );
 }
